@@ -18,21 +18,21 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 
 	//checks that a type object is visitable (not incomplete) 
 	private TypeNode ckvisit(TypeNode t) throws TypeException {
-		visit(t);
+        this.visit(t);
 		return t;
 	} 
 	
 	@Override
-	public TypeNode visitNode(ProgLetInNode n) throws TypeException {
-		if (print) printNode(n);
-		for (Node dec : n.declist)
+	public TypeNode visitNode(ProgLetInNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		for (Node dec : node.declist)
 			try {
-				visit(dec);
+                this.visit(dec);
 			} catch (IncomplException e) { 
 			} catch (TypeException e) {
 				System.out.println("Type checking error in a declaration: " + e.text);
 			}
-		return visit(n.exp);
+		return this.visit(node.exp);
 	}
 
 	@Override
