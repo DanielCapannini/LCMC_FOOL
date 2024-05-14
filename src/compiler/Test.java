@@ -9,6 +9,7 @@ import svm.*;
 
 public class Test {
     public static void main(String[] args) throws Exception {
+   			
     	String fileName = "res/prova2.fool";
 
     	CharStream chars = CharStreams.fromFileName(fileName);
