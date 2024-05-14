@@ -99,8 +99,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	public Void visitNode(IfNode n) {
 		if (print) printNode(n);
 		visit(n.cond);
-		visit(n.th);
-		visit(n.el);
+		visit(n.thenNode);
+		visit(n.elseNode);
 		return null;
 	}
 	
@@ -139,7 +139,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			n.entry = entry;
 			n.nl = nestingLevel;
 		}
-		for (Node arg : n.arglist) visit(arg);
+		for (Node arg : n.argumentList) visit(arg);
 		return null;
 	}
 
@@ -159,13 +159,13 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(BoolNode n) {
-		if (print) printNode(n, n.val.toString());
+		if (print) printNode(n, n.value.toString());
 		return null;
 	}
 
 	@Override
 	public Void visitNode(IntNode n) {
-		if (print) printNode(n, n.val.toString());
+		if (print) printNode(n, n.value.toString());
 		return null;
 	}
 }

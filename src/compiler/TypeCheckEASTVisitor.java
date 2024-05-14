@@ -75,8 +75,8 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if (print) printNode(n);
 		if ( !(isSubtype(visit(n.cond), new BoolTypeNode())) )
 			throw new TypeException("Non boolean condition in if",n.getLine());
-		TypeNode t = visit(n.th);
-		TypeNode e = visit(n.el);
+		TypeNode t = visit(n.thenNode);
+		TypeNode e = visit(n.elseNode);
 		if (isSubtype(t, e)) return e;
 		if (isSubtype(e, t)) return t;
 		throw new TypeException("Incompatible types in then-else branches",n.getLine());
@@ -117,12 +117,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if ( !(t instanceof ArrowTypeNode) )
 			throw new TypeException("Invocation of a non-function "+n.id,n.getLine());
 		ArrowTypeNode at = (ArrowTypeNode) t;
-		if ( !(at.parlist.size() == n.arglist.size()) )
+		if ( !(at.parameterList.size() == n.argumentList.size()) )
 			throw new TypeException("Wrong number of parameters in the invocation of "+n.id,n.getLine());
-		for (int i = 0; i < n.arglist.size(); i++)
-			if ( !(isSubtype(visit(n.arglist.get(i)),at.parlist.get(i))) )
+		for (int i = 0; i < n.argumentList.size(); i++)
+			if ( !(isSubtype(visit(n.argumentList.get(i)),at.parameterList.get(i))) )
 				throw new TypeException("Wrong type for "+(i+1)+"-th parameter in the invocation of "+n.id,n.getLine());
-		return at.ret;
+		return at.returnType;
 	}
 
 	@Override
@@ -136,13 +136,13 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 
 	@Override
 	public TypeNode visitNode(BoolNode n) {
-		if (print) printNode(n,n.val.toString());
+		if (print) printNode(n,n.value.toString());
 		return new BoolTypeNode();
 	}
 
 	@Override
 	public TypeNode visitNode(IntNode n) {
-		if (print) printNode(n,n.val.toString());
+		if (print) printNode(n,n.value.toString());
 		return new IntTypeNode();
 	}
 
@@ -151,8 +151,8 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(ArrowTypeNode n) throws TypeException {
 		if (print) printNode(n);
-		for (Node par: n.parlist) visit(par);
-		visit(n.ret,"->"); //marks return type
+		for (Node par: n.parameterList) visit(par);
+		visit(n.returnType,"->"); //marks return type
 		return null;
 	}
 

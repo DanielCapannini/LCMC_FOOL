@@ -88,10 +88,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			visit(n.cond),
 			"push 1",
 			"beq "+l1,
-			visit(n.el),
+			visit(n.elseNode),
 			"b "+l2,
 			l1+":",
-			visit(n.th),
+			visit(n.thenNode),
 			l2+":"
 		);
 	}
@@ -137,7 +137,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(CallNode n) {
 		if (print) printNode(n,n.id);
 		String argCode = null, getAR = null;
-		for (int i=n.arglist.size()-1;i>=0;i--) argCode=nlJoin(argCode,visit(n.arglist.get(i)));
+		for (int i=n.argumentList.size()-1;i>=0;i--) argCode=nlJoin(argCode,visit(n.argumentList.get(i)));
 		for (int i = 0;i<n.nl-n.entry.nl;i++) getAR=nlJoin(getAR,"lw");
 		return nlJoin(
 			"lfp", // load Control Link (pointer to frame of function "id" caller)
@@ -168,13 +168,13 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 	@Override
 	public String visitNode(BoolNode n) {
-		if (print) printNode(n,n.val.toString());
-		return "push "+(n.val?1:0);
+		if (print) printNode(n,n.value.toString());
+		return "push "+(n.value?1:0);
 	}
 
 	@Override
 	public String visitNode(IntNode n) {
-		if (print) printNode(n,n.val.toString());
-		return "push "+n.val;
+		if (print) printNode(n,n.value.toString());
+		return "push "+n.value;
 	}
 }

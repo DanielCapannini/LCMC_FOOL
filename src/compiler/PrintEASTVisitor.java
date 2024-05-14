@@ -59,8 +59,8 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	public Void visitNode(IfNode n) {
 		printNode(n);
 		visit(n.cond);
-		visit(n.th);
-		visit(n.el);
+		visit(n.thenNode);
+		visit(n.elseNode);
 		return null;
 	}
 
@@ -92,7 +92,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	public Void visitNode(CallNode n) {
 		printNode(n,n.id+" at nestinglevel "+n.nl); 
 		visit(n.entry);
-		for (Node arg : n.arglist) visit(arg);
+		for (Node arg : n.argumentList) visit(arg);
 		return null;
 	}
 
@@ -105,21 +105,21 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(BoolNode n) {
-		printNode(n,n.val.toString());
+		printNode(n,n.value.toString());
 		return null;
 	}
 
 	@Override
 	public Void visitNode(IntNode n) {
-		printNode(n,n.val.toString());
+		printNode(n,n.value.toString());
 		return null;
 	}
 	
 	@Override
 	public Void visitNode(ArrowTypeNode n) {
 		printNode(n);
-		for (Node par: n.parlist) visit(par);
-		visit(n.ret,"->"); //marks return type
+		for (Node par: n.parameterList) visit(par);
+		visit(n.returnType,"->"); //marks return type
 		return null;
 	}
 
