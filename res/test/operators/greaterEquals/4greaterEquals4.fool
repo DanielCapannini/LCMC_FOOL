@@ -1,0 +1,1 @@
+let var x:bool = 4 >= 4; in print(x);

@@ -1,0 +1,1 @@
+let var x:bool = !true; in print(x);

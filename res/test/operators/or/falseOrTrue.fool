@@ -1,0 +1,1 @@
+let var x:bool = false||true; in print(x);
