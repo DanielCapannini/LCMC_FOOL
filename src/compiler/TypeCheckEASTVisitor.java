@@ -47,7 +47,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(FunNode n) throws TypeException {
 		if (this.print) this.printNode(n,n.id);
-		for (Node dec : n.declist)
+		for (Node dec : n.declarationlist)
 			try {
                 this.visit(dec);
 			} catch (IncomplException e) { 
