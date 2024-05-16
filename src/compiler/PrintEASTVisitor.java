@@ -27,8 +27,8 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	public Void visitNode(FunNode n) {
         this.printNode(n,n.id);
         this.visit(n.retType);
-		for (ParNode par : n.parlist) this.visit(par);
-		for (Node dec : n.declist) this.visit(dec);
+		for (ParNode par : n.parameterlist) this.visit(par);
+		for (Node dec : n.declarationlist) this.visit(dec);
         this.visit(n.exp);
 		return null;
 	}
@@ -90,7 +90,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(CallNode n) {
-        this.printNode(n,n.id+" at nestinglevel "+n.nl);
+        this.printNode(n,n.id+" at nestinglevel "+n.nestingLevel);
         this.visit(n.entry);
 		for (Node arg : n.argumentList) this.visit(arg);
 		return null;
@@ -98,7 +98,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(IdNode n) {
-        this.printNode(n,n.id+" at nestinglevel "+n.nl);
+        this.printNode(n,n.id+" at nestinglevel "+n.nestingLevel);
         this.visit(n.entry);
 		return null;
 	}
