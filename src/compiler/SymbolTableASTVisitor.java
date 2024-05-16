@@ -41,7 +41,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	public Void visitNode(ProgLetInNode n) {
 		if (this.print) this.printNode(n);
         this.symbolTable.add(new HashMap<>());
-	    for (Node dec : n.declist) this.visit(dec);
+	    for (Node dec : n.declarationlist) this.visit(dec);
         this.visit(n.exp);
         this.symbolTable.remove(0);
 		return null;
