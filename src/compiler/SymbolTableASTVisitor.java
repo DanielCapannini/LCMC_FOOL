@@ -1,7 +1,6 @@
 package compiler;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import compiler.AST.*;
 import compiler.exc.*;
@@ -60,7 +59,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		if (this.print) this.printNode(n);
 		Map<String, STentry> currentSymbolTable = this.symbolTable.get(this.nestingLevel);
 		List<TypeNode> parameterTypeList = new ArrayList<>();
-		for (ParNode par : n.parlist) parameterTypeList.add(par.getType());
+		for (ParNode par : n.parameterlist) parameterTypeList.add(par.getType());
 		STentry entry = new STentry(this.nestingLevel, new ArrowTypeNode(parameterTypeList,n.retType), this.decOffset--);
 		//inserimento di ID nella symtable
 		if (currentSymbolTable.put(n.id, entry) != null) {
@@ -76,12 +75,12 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 
 		int parOffset=1;
-		for (ParNode par : n.parlist)
+		for (ParNode par : n.parameterlist)
 			if (newSymbolTable.put(par.id, new STentry(this.nestingLevel,par.getType(),parOffset++)) != null) {
 				System.out.println("Par id " + par.id + " at line "+ n.getLine() +" already declared");
                 this.stErrors++;
 			}
-		for (Node dec : n.declist) this.visit(dec);
+		for (Node dec : n.declarationlist) this.visit(dec);
         this.visit(n.exp);
 		//rimuovere la hashmap corrente poiche' esco dallo scope               
         this.symbolTable.remove(this.nestingLevel--);
@@ -201,7 +200,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
             this.stErrors++;
 		} else {
 			n.entry = entry;
-			n.nl = this.nestingLevel;
+			n.nestingLevel = this.nestingLevel;
 		}
 		for (Node arg : n.argumentList) this.visit(arg);
 		return null;
@@ -216,7 +215,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
             this.stErrors++;
 		} else {
 			n.entry = entry;
-			n.nl = this.nestingLevel;
+			n.nestingLevel = this.nestingLevel;
 		}
 		return null;
 	}
