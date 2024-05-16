@@ -10,7 +10,7 @@ import svm.*;
 public class Test {
     public static void main(String[] args) throws Exception {
    			
-    	String fileName = "res/test/oo/bankloan.fool";
+    	String fileName = "res/test/operators/minus/5minus3.fool";
 
     	CharStream chars = CharStreams.fromFileName(fileName);
     	FOOLLexer lexer = new FOOLLexer(chars);
