@@ -49,14 +49,14 @@ public class AST {
 	public static class FunNode extends DecNode {
 		final String id;
 		final TypeNode retType;
-		final List<ParNode> parlist;
-		final List<DecNode> declist; 
+		final List<ParNode> parameterlist;
+		final List<DecNode> declarationlist;
 		final Node exp;
 		FunNode(String i, TypeNode rt, List<ParNode> pl, List<DecNode> dl, Node e) {
             this.id =i;
             this.retType =rt;
-            this.parlist =Collections.unmodifiableList(pl);
-            this.declist =Collections.unmodifiableList(dl);
+            this.parameterlist =Collections.unmodifiableList(pl);
+            this.declarationlist =Collections.unmodifiableList(dl);
             this.exp =e;
 	    }
 		
@@ -194,7 +194,7 @@ public class AST {
 		final String id;
 		final List<Node> argumentList;
 		STentry entry;
-		int nl;
+		int nestingLevel;
 		CallNode(String i, List<Node> p) {
             this.id = i;
             this.argumentList = Collections.unmodifiableList(p);
@@ -214,7 +214,7 @@ public class AST {
 	public static class IdNode extends Node {
 		final String id;
 		STentry entry;
-		int nl;
+		int nestingLevel;
 		IdNode(String i) {
             this.id = i;}
 
