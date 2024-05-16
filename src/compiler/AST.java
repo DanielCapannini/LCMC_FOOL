@@ -12,10 +12,10 @@ public class AST {
 	 * @exp exp espressione principale
 	 */
 	public static class ProgLetInNode extends Node {
-		final List<DecNode> declist;
+		final List<DecNode> declarationlist;
 		final Node exp;
 		ProgLetInNode(List<DecNode> d, Node e) {
-            this.declist = Collections.unmodifiableList(d);
+            this.declarationlist = Collections.unmodifiableList(d);
             this.exp = e;
 		}
 
