@@ -446,6 +446,7 @@ public class AST {
 		}
 	}
 
+
 	/**
 	 * Nodo per la definizione di una classe
 	 *

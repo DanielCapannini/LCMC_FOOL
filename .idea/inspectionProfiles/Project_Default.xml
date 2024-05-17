@@ -3,7 +3,7 @@
     <option name="myName" value="Project Default" />
     <inspection_tool class="ClassWithOnlyPrivateConstructors" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="JavadocDeclaration" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="ADDITIONAL_TAGS" value="declarations,exp,id,returnType,parameters,cond,thenBranch,elseBranch,th,el,thenB,elseB,thenNode,elseNode,left,right,argumentList,entry,nl,typeId,functionalType,fieldList,methodList,classId,nestingLevel,methodEntry,methodId,objectId,offset,label,parameterList,declarationList,superId,superEntry" />
+      <option name="ADDITIONAL_TAGS" value="declarations,exp,id,returnType,parameters,cond,thenBranch,elseBranch,th,el,thenB,elseB,thenNode,elseNode,left,right,argumentList,entry,nl,typeId,functionalType,fieldList,methodList,classId,nestingLevel,methodEntry,methodId,objectId,offset,label,parameterList,declarationList,superId,superEntry,print,indent" />
     </inspection_tool>
     <inspection_tool class="UnqualifiedFieldAccess" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="UnqualifiedMethodAccess" enabled="true" level="WARNING" enabled_by_default="true" />

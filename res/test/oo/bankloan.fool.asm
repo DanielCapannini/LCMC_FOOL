@@ -146,10 +146,10 @@ add
 lw
 push -1
 beq label10
-push 0
+beq  0
 b label11
 label10:
-push 1
+push  1
 label11:
 push 1
 beq label8

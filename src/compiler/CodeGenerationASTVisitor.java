@@ -37,7 +37,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	private static final String STORE_HP = "shp";
 	private final List<List<String>> dispatchTableList = new ArrayList<>();
 
-    CodeGenerationASTVisitor() {
+    public CodeGenerationASTVisitor() {
     }
 
     CodeGenerationASTVisitor(boolean debug) {
@@ -120,7 +120,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         String l2 = freshLabel();
         return nlJoin(
                 this.visit(n.cond),
-                PUSH + " 1",
+                PUSH + 1,
                 BRANCH_EQUAL + l1,
                 this.visit(n.elseNode),
                 BRANCH + l2,

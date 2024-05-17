@@ -16,7 +16,7 @@ import static compiler.TypeRels.*;
 //visitSTentry(s) ritorna, per una STentry s, il tipo contenuto al suo interno
 public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException> {
 
-	TypeCheckEASTVisitor() { super(true); } // enables incomplete tree exceptions 
+	public TypeCheckEASTVisitor() { super(true); } // enables incomplete tree exceptions
 	TypeCheckEASTVisitor(boolean debug) { super(true,debug); } // enables print for debugging
 
 	//checks that a type object is visitable (not incomplete) 
@@ -177,6 +177,15 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitSTentry(STentry entry) throws TypeException {
 		if (this.print) this.printSTentry("type");
 		return this.ckvisit(entry.type);
+	}
+
+	@Override
+	public TypeNode visitNode(MinusNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		if (!(isSubtype(this.visit(node.left), new IntTypeNode())
+				&& isSubtype(this.visit(node.right), new IntTypeNode())))
+			throw new TypeException("Non integers in sum", node.getLine());
+		return new IntTypeNode();
 	}
 
 	@Override
