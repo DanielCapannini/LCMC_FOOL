@@ -39,135 +39,135 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	}
 
 	@Override
-	public TypeNode visitNode(ProgNode n) throws TypeException {
-		if (this.print) this.printNode(n);
-		return this.visit(n.exp);
+	public TypeNode visitNode(ProgNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		return this.visit(node.exp);
 	}
 
 	@Override
-	public TypeNode visitNode(FunNode n) throws TypeException {
-		if (this.print) this.printNode(n,n.id);
-		for (Node dec : n.declarationlist)
+	public TypeNode visitNode(FunNode node) throws TypeException {
+		if (this.print) this.printNode(node,node.id);
+		for (Node dec : node.declarationlist)
 			try {
                 this.visit(dec);
 			} catch (IncomplException e) { 
 			} catch (TypeException e) {
 				System.out.println("Type checking error in a declaration: " + e.text);
 			}
-		if ( !isSubtype(this.visit(n.exp), this.ckvisit(n.retType)) )
-			throw new TypeException("Wrong return type for function " + n.id,n.getLine());
+		if ( !isSubtype(this.visit(node.exp), this.ckvisit(node.retType)) )
+			throw new TypeException("Wrong return type for function " + node.id,node.getLine());
 		return null;
 	}
 
 	@Override
-	public TypeNode visitNode(VarNode n) throws TypeException {
-		if (this.print) this.printNode(n,n.id);
-		if ( !isSubtype(this.visit(n.exp), this.ckvisit(n.getType())) )
-			throw new TypeException("Incompatible value for variable " + n.id,n.getLine());
+	public TypeNode visitNode(VarNode node) throws TypeException {
+		if (this.print) this.printNode(node,node.id);
+		if ( !isSubtype(this.visit(node.exp), this.ckvisit(node.getType())) )
+			throw new TypeException("Incompatible value for variable " + node.id,node.getLine());
 		return null;
 	}
 
 	@Override
-	public TypeNode visitNode(PrintNode n) throws TypeException {
-		if (this.print) this.printNode(n);
-		return this.visit(n.exp);
+	public TypeNode visitNode(PrintNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		return this.visit(node.exp);
 	}
 
 	@Override
-	public TypeNode visitNode(IfNode n) throws TypeException {
-		if (this.print) this.printNode(n);
-		if ( !(isSubtype(this.visit(n.cond), new BoolTypeNode())) )
-			throw new TypeException("Non boolean condition in if",n.getLine());
-		TypeNode thenNode = this.visit(n.thenNode);
-		TypeNode elseNode = this.visit(n.elseNode);
+	public TypeNode visitNode(IfNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		if ( !(isSubtype(this.visit(node.cond), new BoolTypeNode())) )
+			throw new TypeException("Non boolean condition in if",node.getLine());
+		TypeNode thenNode = this.visit(node.thenNode);
+		TypeNode elseNode = this.visit(node.elseNode);
 		if (isSubtype(thenNode, elseNode)) return elseNode;
 		if (isSubtype(elseNode, thenNode)) return thenNode;
-		throw new TypeException("Incompatible types in then-else branches",n.getLine());
+		throw new TypeException("Incompatible types in then-else branches",node.getLine());
 	}
 
 	@Override
-	public TypeNode visitNode(EqualNode n) throws TypeException {
-		if (this.print) this.printNode(n);
-		TypeNode left = this.visit(n.left);
-		TypeNode right = this.visit(n.right);
+	public TypeNode visitNode(EqualNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		TypeNode left = this.visit(node.left);
+		TypeNode right = this.visit(node.right);
 		if ( !(isSubtype(left, right) || isSubtype(right, left)) )
-			throw new TypeException("Incompatible types in equal",n.getLine());
+			throw new TypeException("Incompatible types in equal",node.getLine());
 		return new BoolTypeNode();
 	}
 
 	@Override
-	public TypeNode visitNode(TimesNode n) throws TypeException {
-		if (this.print) this.printNode(n);
-		if ( !(isSubtype(this.visit(n.left), new IntTypeNode())
-				&& isSubtype(this.visit(n.right), new IntTypeNode())) )
-			throw new TypeException("Non integers in multiplication",n.getLine());
+	public TypeNode visitNode(TimesNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		if ( !(isSubtype(this.visit(node.left), new IntTypeNode())
+				&& isSubtype(this.visit(node.right), new IntTypeNode())) )
+			throw new TypeException("Non integers in multiplication",node.getLine());
 		return new IntTypeNode();
 	}
 
 	@Override
-	public TypeNode visitNode(PlusNode n) throws TypeException {
-		if (this.print) this.printNode(n);
-		if ( !(isSubtype(this.visit(n.left), new IntTypeNode())
-				&& isSubtype(this.visit(n.right), new IntTypeNode())) )
-			throw new TypeException("Non integers in sum",n.getLine());
+	public TypeNode visitNode(PlusNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		if ( !(isSubtype(this.visit(node.left), new IntTypeNode())
+				&& isSubtype(this.visit(node.right), new IntTypeNode())) )
+			throw new TypeException("Non integers in sum",node.getLine());
 		return new IntTypeNode();
 	}
 
 	@Override
-	public TypeNode visitNode(CallNode n) throws TypeException {
-		if (this.print) this.printNode(n,n.id);
-		TypeNode t = this.visit(n.entry);
+	public TypeNode visitNode(CallNode node) throws TypeException {
+		if (this.print) this.printNode(node,node.id);
+		TypeNode t = this.visit(node.entry);
 		if ( !(t instanceof ArrowTypeNode) )
-			throw new TypeException("Invocation of a non-function "+n.id,n.getLine());
+			throw new TypeException("Invocation of a non-function "+node.id,node.getLine());
 		ArrowTypeNode arrowTypeNode = (ArrowTypeNode) t;
-		if ( !(arrowTypeNode.parameterList.size() == n.argumentList.size()) )
-			throw new TypeException("Wrong number of parameters in the invocation of "+n.id,n.getLine());
-		for (int i = 0; i < n.argumentList.size(); i++)
-			if ( !(isSubtype(this.visit(n.argumentList.get(i)),arrowTypeNode.parameterList.get(i))) )
-				throw new TypeException("Wrong type for "+(i+1)+"-th parameter in the invocation of "+n.id,n.getLine());
+		if ( !(arrowTypeNode.parameterList.size() == node.argumentList.size()) )
+			throw new TypeException("Wrong number of parameters in the invocation of "+node.id,node.getLine());
+		for (int i = 0; i < node.argumentList.size(); i++)
+			if ( !(isSubtype(this.visit(node.argumentList.get(i)),arrowTypeNode.parameterList.get(i))) )
+				throw new TypeException("Wrong type for "+(i+1)+"-th parameter in the invocation of "+node.id,node.getLine());
 		return arrowTypeNode.returnType;
 	}
 
 	@Override
-	public TypeNode visitNode(IdNode n) throws TypeException {
-		if (this.print) this.printNode(n,n.id);
-		TypeNode t = this.visit(n.entry);
+	public TypeNode visitNode(IdNode node) throws TypeException {
+		if (this.print) this.printNode(node,node.id);
+		TypeNode t = this.visit(node.entry);
 		if (t instanceof ArrowTypeNode)
-			throw new TypeException("Wrong usage of function identifier " + n.id,n.getLine());
+			throw new TypeException("Wrong usage of function identifier " + node.id,node.getLine());
 		return t;
 	}
 
 	@Override
-	public TypeNode visitNode(BoolNode n) {
-		if (this.print) this.printNode(n,n.value.toString());
+	public TypeNode visitNode(BoolNode node) {
+		if (this.print) this.printNode(node,node.value.toString());
 		return new BoolTypeNode();
 	}
 
 	@Override
-	public TypeNode visitNode(IntNode n) {
-		if (this.print) this.printNode(n,n.value.toString());
+	public TypeNode visitNode(IntNode node) {
+		if (this.print) this.printNode(node,node.value.toString());
 		return new IntTypeNode();
 	}
 
 // gestione tipi incompleti	(se lo sono lancia eccezione)
 	
 	@Override
-	public TypeNode visitNode(ArrowTypeNode n) throws TypeException {
-		if (this.print) this.printNode(n);
-		for (Node par: n.parameterList) this.visit(par);
-        this.visit(n.returnType,"->"); //marks return type
+	public TypeNode visitNode(ArrowTypeNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		for (Node parameter: node.parameterList) this.visit(parameter);
+        this.visit(node.returnType,"->"); //marks return type
 		return null;
 	}
 
 	@Override
-	public TypeNode visitNode(BoolTypeNode n) {
-		if (this.print) this.printNode(n);
+	public TypeNode visitNode(BoolTypeNode node) {
+		if (this.print) this.printNode(node);
 		return null;
 	}
 
 	@Override
-	public TypeNode visitNode(IntTypeNode n) {
-		if (this.print) this.printNode(n);
+	public TypeNode visitNode(IntTypeNode node) {
+		if (this.print) this.printNode(node);
 		return null;
 	}
 
