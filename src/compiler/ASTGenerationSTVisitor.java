@@ -1,6 +1,7 @@
 package compiler;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -56,11 +57,11 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		final List<DecNode> classDeclarationList = c.cldec().stream()
 				.map(this::visit)
 				.map(node -> (DecNode) node)
-				.toList();
+				.collect(Collectors.toList());
 		final List<DecNode> declarationList = c.dec().stream()
 				.map(this::visit)
 				.map(node -> (DecNode) node)
-				.toList();
+				.collect(Collectors.toList());
 		final List<DecNode> decList = new ArrayList<>();
 		decList.addAll(classDeclarationList);
 		decList.addAll(declarationList);
@@ -87,20 +88,24 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	@Override
 	public Node visitFundec(FundecContext c) {
 		if (this.print) this.printVarAndProdName(c);
-		List<ParNode> parList = new ArrayList<>();
-		for (int i = 1; i < c.ID().size(); i++) { 
-			ParNode p = new ParNode(c.ID(i).getText(),(TypeNode) this.visit(c.type(i)));
+		if (c.ID().isEmpty()) return null;
+
+		List<ParNode> parametersList = new ArrayList<>();
+		for (int i = 1; i < c.ID().size(); i++) {
+			ParNode p = new ParNode(c.ID(i).getText(), (TypeNode) this.visit(c.type(i)));
 			p.setLine(c.ID(i).getSymbol().getLine());
-			parList.add(p);
+			parametersList.add(p);
 		}
-		List<DecNode> decList = new ArrayList<>();
-		for (DecContext dec : c.dec()) decList.add((DecNode) this.visit(dec));
-		Node n = null;
-		if (!c.ID().isEmpty()) { //non-incomplete ST
-			n = new FunNode(c.ID(0).getText(),(TypeNode) this.visit(c.type(0)),parList,decList, this.visit(c.exp()));
-			n.setLine(c.FUN().getSymbol().getLine());
-		}
-        return n;
+
+		final List<DecNode> declarationsList = c.dec().stream()
+				.map(dec -> (DecNode) this.visit(dec))
+				.collect(Collectors.toList());
+
+		final String id = c.ID(0).getText();
+		final TypeNode type = (TypeNode) this.visit(c.type(0));
+		final FunNode node = new FunNode(id, type, parametersList, declarationsList, this.visit(c.exp()));
+		node.setLine(c.FUN().getSymbol().getLine());
+		return node;
 	}
 
 	@Override
@@ -240,118 +245,153 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	@Override
 	public Node visitCall(CallContext c) {
 		if (this.print) this.printVarAndProdName(c);
-		List<Node> argumentList = new ArrayList<>();
-		for (ExpContext arg : c.exp()) argumentList.add(this.visit(arg));
-		Node n = new CallNode(c.ID().getText(), argumentList);
+		List<Node> arglist = c.exp().stream().map(this::visit).collect(Collectors.toList());
+
+		Node n = new CallNode(c.ID().getText(), arglist);
 		n.setLine(c.ID().getSymbol().getLine());
 		return n;
 	}
 
 	// OBJECT-ORIENTED EXTENSION
 
+	/**
+	 * Visita l'albero di parsing, se siamo nel contesto della dichiarazione di una classe
+	 *
+	 * @param context il contesto da visitare
+	 * @return un nodo del tipo ClassNode
+	 */
 	@Override
-	public Node visitCldec(final CldecContext c){
-		if(this.print) this.printVarAndProdName(c);
-		if(c.ID().isEmpty()) return null;
+	public Node visitCldec(final CldecContext context) {
+		if (this.print) this.printVarAndProdName(context);
+		if (context.ID().isEmpty()) return null; // Incomplete ST
 
-		final Optional<String> superID = Objects.isNull(c.EXTENDS()) ?
-				Optional.empty() : Optional.of(c.ID(1).getText());
-		final int idSuperPadding = superID.isPresent() ? 2 : 1;
-		final List<FieldNode> fieldList = new ArrayList<>();
-		for(int i = idSuperPadding; i < c.ID().size(); i++){
-			final TypeNode type = (TypeNode) this.visit(c.type(i - idSuperPadding));
-			final FieldNode f = new FieldNode(c.ID(i).getText(), type);
-			f.setLine(c.ID(i).getSymbol().getLine());
-			fieldList.add(f);
+		final Optional<String> superId = Objects.isNull(context.EXTENDS()) ?
+				Optional.empty() : Optional.of(context.ID(1).getText());
+		final int idSuperPadding = superId.isPresent() ? 2 : 1;
+
+		final List<FieldNode> fields = new ArrayList<>();
+		for (int i = idSuperPadding; i < context.ID().size(); i++) {
+			final String id = context.ID(i).getText();
+			final TypeNode type = (TypeNode) this.visit(context.type(i - idSuperPadding));
+			final FieldNode f = new FieldNode(id, type);
+			f.setLine(context.ID(i).getSymbol().getLine());
+			fields.add(f);
 		}
+		final List<MethodNode> methods = context.methdec().stream()
+				.map(x -> (MethodNode) this.visit(x))
+				.collect(Collectors.toList());
 
-		final List<MethodNode> methodList = new ArrayList<>();
-		for (ParseTree node : c.methdec()) {
-			MethodNode method = (MethodNode) this.visit(node);
-			methodList.add(method);
-		}
-
-		final String classID = c.ID(0).getText();
-		final ClassNode classNode = new ClassNode(classID, superID, fieldList, methodList);
-		classNode.setLine(c.ID(0).getSymbol().getLine());
+		final String classId = context.ID(0).getText();
+		final ClassNode classNode = new ClassNode(classId, superId, fields, methods);
+		classNode.setLine(context.ID(0).getSymbol().getLine());
 		return classNode;
 	}
 
+
+	/**
+	 * Visita l'albero di parsing, se siamo nel contesto di un metodo di una funzione
+	 *
+	 * @param context il contesto da visitare
+	 * @return un nodo del tipo MethodNode
+	 */
 	@Override
-	public Node visitMethdec(final MethdecContext c){
-		if (this.print) this.printVarAndProdName(c);
-		if (c.ID().isEmpty()) return null; // Incomplete ST
-		final TypeNode returnType = (TypeNode) this.visit(c.type(0));
+	public Node visitMethdec(final MethdecContext context) {
+		if (this.print) this.printVarAndProdName(context);
+		if (context.ID().isEmpty()) return null; // Incomplete ST
+		final String methodId = context.ID(0).getText();
+		final TypeNode returnType = (TypeNode) this.visit(context.type(0));
 
 		final int idPadding = 1;
-		final List<ParNode> paramList = new ArrayList<>();
-		for (int i = idPadding; i < c.ID().size(); i++) {
-			final TypeNode type = (TypeNode) this.visit(c.type(i));
-			final ParNode p = new ParNode(c.ID(i).getText(), type);
-			p.setLine(c.ID(i).getSymbol().getLine());
-			paramList.add(p);
+		final List<ParNode> params = new ArrayList<>();
+		for (int i = idPadding; i < context.ID().size(); i++) {
+			final String id = context.ID(i).getText();
+			final TypeNode type = (TypeNode) this.visit(context.type(i));
+			final ParNode p = new ParNode(id, type);
+			p.setLine(context.ID(i).getSymbol().getLine());
+			params.add(p);
 		}
 
-		List<DecNode> declarationList = new ArrayList<>();
-		for (ParseTree node : c.dec()) {
-			DecNode declaration = (DecNode) this.visit(node);
-			declarationList.add(declaration);
-		}
+		final List<DecNode> declarations = context.dec().stream()
+				.map(x -> (DecNode) this.visit(x))
+				.collect(Collectors.toList());
 
-		final Node exp = this.visit(c.exp());
-		final MethodNode methodNode = new MethodNode(c.ID(0).getText(), returnType, paramList, declarationList, exp);
-		methodNode.setLine(c.ID(0).getSymbol().getLine());
+		final Node exp = this.visit(context.exp());
+		final MethodNode methodNode = new MethodNode(methodId, returnType, params, declarations, exp);
+		methodNode.setLine(context.ID(0).getSymbol().getLine());
 		return methodNode;
 	}
 
+
+	/**
+	 * Visita l'albero di parsing, se siamo nel contesto dell'espressione "null"
+	 *
+	 * @param context il contesto da visitare
+	 * @return un nodo del tipo EmptyNode
+	 */
 	@Override
-	public Node visitNull(final NullContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitNull(final NullContext context) {
+		if (this.print) this.printVarAndProdName(context);
 		return new EmptyNode();
 	}
 
+	/**
+	 * Visita l'albero di parsing, se siamo nel contesto dell'espressione "."
+	 *
+	 * @param context il contesto da visitare
+	 * @return un nodo del tipo classCallNode
+	 */
 	@Override
-	public Node visitDotCall(final DotCallContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		if (c.ID().size() != 2) return null; // Incomplete ST
+	public Node visitDotCall(final DotCallContext context) {
+		if (this.print) this.printVarAndProdName(context);
+		if (context.ID().size() != 2) return null; // Incomplete ST
 
-		final String objectId = c.ID(0).getText();
-		final String methodId = c.ID(1).getText();
-		final List<Node> argumentList = new ArrayList<>();
-		for (ParseTree exp : c.exp()) {
-			Node argument = this.visit(exp);
-			argumentList.add(argument);
-		}
+		final String objectId = context.ID(0).getText();
+		final String methodId = context.ID(1).getText();
+		final List<Node> args = context.exp().stream()
+				.map(this::visit)
+				.collect(Collectors.toList());
 
-		final ClassCallNode classCallNode = new ClassCallNode(objectId, methodId, argumentList);
-		classCallNode.setLine(c.ID(0).getSymbol().getLine());
+		final ClassCallNode classCallNode = new ClassCallNode(objectId, methodId, args);
+		classCallNode.setLine(context.ID(0).getSymbol().getLine());
 		return classCallNode;
 	}
 
+	/**
+	 * Visita l'albero di parsing, se siamo nel contesto dell'espressione "new"
+	 *
+	 * @param context il contesto da visitare
+	 * @return un nodo del tipo NewNode
+	 */
+
 	@Override
-	public Node visitNew(final NewContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		if (Objects.isNull(c.ID())) return null; // Incomplete ST
+	public Node visitNew(final NewContext context) {
+		if (this.print) this.printVarAndProdName(context);
+		if (Objects.isNull(context.ID())) return null; // Incomplete ST
 
-		final String classId = c.ID().getText();
-		final List<Node> argumentList = new ArrayList<>();
-		for (ParseTree exp : c.exp()) {
-			Node argument = this.visit(exp);
-			argumentList.add(argument);
-		}
+		final String classId = context.ID().getText();
+		final List<Node> args = context.exp().stream()
+				.map(this::visit)
+				.collect(Collectors.toList());
 
-		final NewNode newNode = new NewNode(classId, argumentList);
-		newNode.setLine(c.ID().getSymbol().getLine());
+		final NewNode newNode = new NewNode(classId, args);
+		newNode.setLine(context.ID().getSymbol().getLine());
 		return newNode;
 	}
 
-	@Override
-	public Node visitIdType(final IdTypeContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	/**
+	 * Visita l'albero di parsing, se siamo nel contesto dell'identificativo del tipo di una classe
+	 *
+	 * @param context il contesto da visitare
+	 * @return un nodo del tipo IdTypeNode
+	 */
 
-		final String id = c.ID().getText();
+	@Override
+	public Node visitIdType(final IdTypeContext context) {
+		if (this.print) this.printVarAndProdName(context);
+
+		final String id = context.ID().getText();
 		final RefTypeNode node = new RefTypeNode(id);
-		node.setLine(c.ID().getSymbol().getLine());
+		node.setLine(context.ID().getSymbol().getLine());
 		return node;
 	}
 }
