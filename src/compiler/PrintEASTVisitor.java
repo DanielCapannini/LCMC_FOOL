@@ -204,8 +204,8 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(ClassNode n) {
         this.printNode(n, n.classId + " extends " + n.superId.orElse("nothing"));
-		for(Node f: n.fieldList) this.visit(f);
-		for (Node m : n.methodList) this.visit(m);
+		n.fieldList.forEach(this::visit);
+		n.methodList.forEach(this::visit);
 		return null;
 	}
 
@@ -220,8 +220,8 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	public Void visitNode(MethodNode n) {
         this.printNode(n, n.id + " Offset: " + n.offset);
         this.visit(n.returnType);
-		for(Node p : n.parameterList) this.visit(p);
-		for (Node d : n.declarationList) this.visit(d);
+		n.parameterList.forEach(this::visit);
+		n.declarationList.forEach(this::visit);
         this.visit(n.exp);
 		return null;
 	}
@@ -231,14 +231,14 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
         this.printNode(n, n.objectId + "." + n.objectId + " at nestinglevel: " + n. nestingLevel);
         this.visit(n.entry);
         this.visit(n.methodEntry);
-		for (Node a : n.argumentList) this.visit(a);
+		n.argumentList.forEach(this::visit);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(NewNode n) {
         this.printNode(n, n.classId + " at nestinglevel: " + n.entry.nl);
-		for (Node a : n.argumentList) this.visit(a);
+		n.argumentList.forEach(this::visit);
         this.visit(n.entry);
 		return null;
 	}
@@ -252,15 +252,15 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(ClassTypeNode n) {
         this.printNode(n);
-		for (Node f : n.fieldList) this.visit(f);
-		for (Node m : n.methodList) this.visit(m);
+		n.fieldList.forEach(this::visit);
+		n.methodList.forEach(this::visit);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(MethodTypeNode n) {
         this.printNode(n);
-		for (Node fp : n.functionalType.parameterList) this.visit(fp);
+		n.functionalType.parameterList.forEach(this::visit);
         this.visit(n.functionalType.returnType, "->"); //marks return type
 		return null;
 	}
