@@ -22,7 +22,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	 */
 	private final Map<String, VirtualTable> classTable = new HashMap<>();
 
-	private List<Map<String, STentry>> symbolTable = new ArrayList<>();
+	private final List<Map<String, STentry>> symbolTable = new ArrayList<>();
 	private int nestingLevel=0; // current nesting level
 	private int decOffset=-2; // counter for offset of local declarations at current nesting level 
 	public int stErrors=0;
@@ -39,32 +39,32 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	}
 
 	@Override
-	public Void visitNode(ProgLetInNode n) {
-		if (this.print) this.printNode(n);
+	public Void visitNode(ProgLetInNode node) {
+		if (this.print) this.printNode(node);
         this.symbolTable.add(new HashMap<>());
-		n.declarationlist.forEach(this::visit);
-        this.visit(n.exp);
+		for (Node declaration : node.declarationlist) this.visit(declaration);
+        this.visit(node.exp);
         this.symbolTable.remove(0);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(ProgNode n) {
-		if (this.print) this.printNode(n);
-        this.visit(n.exp);
+	public Void visitNode(ProgNode node) {
+		if (this.print) this.printNode(node);
+        this.visit(node.exp);
 		return null;
 	}
 	
 	@Override
-	public Void visitNode(FunNode n) {
-		if (this.print) this.printNode(n);
+	public Void visitNode(FunNode node) {
+		if (this.print) this.printNode(node);
 		Map<String, STentry> currentSymbolTable = this.symbolTable.get(this.nestingLevel);
 		List<TypeNode> parameterTypeList = new ArrayList<>();
-		for (ParNode par : n.parameterlist) parameterTypeList.add(par.getType());
-		STentry entry = new STentry(this.nestingLevel, new ArrowTypeNode(parameterTypeList,n.retType), this.decOffset--);
+		for (ParNode par : node.parameterlist) parameterTypeList.add(par.getType());
+		STentry entry = new STentry(this.nestingLevel, new ArrowTypeNode(parameterTypeList,node.retType), this.decOffset--);
 		//inserimento di ID nella symtable
-		if (currentSymbolTable.put(n.id, entry) != null) {
-			System.out.println("Fun id " + n.id + " at line "+ n.getLine() +" already declared");
+		if (currentSymbolTable.put(node.id, entry) != null) {
+			System.out.println("Fun id " + node.id + " at line "+ node.getLine() +" already declared");
             this.stErrors++;
 		} 
 		//creare una nuova hashmap per la symTable
@@ -76,13 +76,13 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 
 		int parOffset=1;
-		for (ParNode par : n.parameterlist)
+		for (ParNode par : node.parameterlist)
 			if (newSymbolTable.put(par.id, new STentry(this.nestingLevel,par.getType(),parOffset++)) != null) {
-				System.out.println("Par id " + par.id + " at line "+ n.getLine() +" already declared");
+				System.out.println("Par id " + par.id + " at line "+ node.getLine() +" already declared");
                 this.stErrors++;
 			}
-		for (Node dec : n.declarationlist) this.visit(dec);
-        this.visit(n.exp);
+		for (Node dec : node.declarationlist) this.visit(dec);
+        this.visit(node.exp);
 		//rimuovere la hashmap corrente poiche' esco dallo scope               
         this.symbolTable.remove(this.nestingLevel--);
         this.decOffset =prevNLDecOffset; // restores counter for offset of declarations at previous nesting level
@@ -362,7 +362,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	public Void visitNode(final MethodNode node) {
 		if (this.print) this.printNode(node);
 		final Map<String, STentry> currentTable = this.symbolTable.get(this.nestingLevel);
-		final List<TypeNode> params = node.parameterList.stream().map(ParNode::getType).collect(Collectors.toList());
+		List<TypeNode> params = new ArrayList<>();
+		for (ParNode parNode : node.parameterList) {
+			params.add(parNode.getType());
+		}
 		final boolean isOverriding = currentTable.containsKey(node.id);
 		final TypeNode methodType = new MethodTypeNode(params, node.returnType);
 		STentry entry = new STentry(this.nestingLevel, methodType, this.decOffset++);
@@ -399,7 +402,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
                 this.stErrors++;
 			}
 		}
-		node.declarationList.forEach(this::visit);
+		for (Node declaration : node.declarationList) this.visit(declaration);
         this.visit(node.exp);
 
 		// Remove the current nesting level symbolTable.
@@ -440,19 +443,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
             this.stErrors++;
 		}
 
-		node.argumentList.forEach(this::visit);
+		for(Node argument : node.argumentList) this.visit(argument);
 		return null;
 	}
-	/**
-	 * Visitare un NewNode.
-	 * Verifica se l'id della classe è stato dichiarato, facendo lookup nella virtual table delle classi
-	 * Se l'id della classe non è stato dichiarato, stampa errore.
-	 * Se l'id della classe è stato dichiarato, setta STentry del nodo.
-	 * Infine, visita gli argomenti.
-	 *
-	 * @param node the NewNode to visit
-	 * @return null
-	 */
+
 	@Override
 	public Void visitNode(final NewNode node) {
 		if (this.print) this.printNode(node);
@@ -463,7 +457,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 
 		node.entry = this.symbolTable.get(0).get(node.classId);
-		node.argumentList.forEach(this::visit);
+		for (Node argument : node.argumentList) this.visit(argument);
 		return null;
 	}
 
