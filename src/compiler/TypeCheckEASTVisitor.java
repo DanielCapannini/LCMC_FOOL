@@ -262,6 +262,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		// eredito, quindi aggiungo la mia classe in superType
 		superType.put(node.classId, parent);
 		final ClassTypeNode classType = (ClassTypeNode) node.getType();
+		//Otimizzazione 2
 		final ClassTypeNode superClassType = (ClassTypeNode) node.superEntry.type;
 
 		//CAMPI: controllo che gli overriding siano corretti.
@@ -368,6 +369,8 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		}
 		return new RefTypeNode(node.classId);
 	}
+
+	// OO Type Nodes
 
 	@Override
 	public TypeNode visitNode(final ClassTypeNode node) throws TypeException {
