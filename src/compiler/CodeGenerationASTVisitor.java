@@ -377,12 +377,6 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
-	/**
-	 * Genera il codice per il nodo MethodNode.
-	 *
-	 * @param node il nodo MethodNode
-	 * @return il codice generato per il nodo MethodNode
-	 */
 	@Override
 	public String visitNode(MethodNode node) {
 		if (this.print) this.printNode(node);
