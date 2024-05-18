@@ -48,7 +48,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     public String visitNode(ProgLetInNode n) {
         if (this.print) this.printNode(n);
         String declarationCode = null;
-        for (Node dec : n.declarationlist) declarationCode = nlJoin(declarationCode, visit(dec));
+        for (Node dec : n.declarationlist) declarationCode = nlJoin(declarationCode, this.visit(dec));
         return nlJoin(
                 PUSH + 0,
                 declarationCode, // generate code for declarations (allocation)
@@ -69,13 +69,19 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
     @Override
     public String visitNode(FunNode n) {
-        if (this.print) this.printNode(n, n.id);
-        String declarationListCode = null, popDeclaration = null, popParameter = null;
-        for (Node dec : n.declarationlist) {
-            declarationListCode = nlJoin(declarationListCode, this.visit(dec));
-            popDeclaration = nlJoin(popDeclaration, POP);
-        }
-        for (final ParNode ignored : n.parameterlist) popParameter = nlJoin(popParameter, POP);
+		if (this.print) this.printNode(n, n.id);
+		String declarationListCode = null;
+		String popDeclaration = null;
+		String popParameter = null;
+
+		for (Node declaration : n.declarationlist) {
+			declarationListCode = nlJoin(declarationListCode, this.visit(declaration));
+			popDeclaration = nlJoin(popDeclaration, POP);
+		}
+
+		for (final ParNode ignored : n.parameterlist) {
+			popParameter = nlJoin(popParameter, POP);
+		}
         String funl = freshFunLabel();
         putCode(
                 nlJoin(
@@ -139,10 +145,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
                 this.visit(n.left),
                 this.visit(n.right),
                 BRANCH_EQUAL + trueLabel,
-                BRANCH_EQUAL + " 0",
+                PUSH + 0,
                 BRANCH + falseLabel,
                 trueLabel + ":",
-                PUSH + " 1",
+                PUSH + 1,
                 falseLabel + ":"
         );
     }
@@ -171,20 +177,24 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     public String visitNode(CallNode n) {
         if (this.print) this.printNode(n, n.id);
         String argumentCode = null, getAR = null;
+		final String loadARAddress = n.entry.type instanceof MethodTypeNode ? LOAD_WORD : "";
         for (int i = n.argumentList.size() - 1; i >= 0; i--) argumentCode = nlJoin(argumentCode, this.visit(n.argumentList.get(i)));
         for (int i = 0; i < n.nestingLevel - n.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
         return nlJoin(
-                LOAD_FP, // load Control Link (pointer to frame of function "id" caller)
-                argumentCode, // generate code for argument expressions in reversed order
-				LOAD_FP, getAR, // retrieve address of frame containing "id" declaration
-                // by following the static chain (of Access Links)
-                STORE_TM, // set $tm to popped value (with the aim of duplicating top of stack)
-                LOAD_TM, // load Access Link (pointer to frame of function "id" declaration)
-                LOAD_TM, // duplicate top of stack
-                PUSH + n.entry.offset, ADD, // compute address of "id" declaration
-                LOAD_WORD, // load address of "id" function
-                JUMP_SUBROUTINE  // jump to popped address (saving address of subsequent instruction in $ra)
-        );
+				LOAD_FP,            //carica il Control Link (che è un puntatore all'id del chiamante)
+				argumentCode,             //genera il codice per gli argomenti delle espressione in ordine inverso
+				LOAD_FP,
+				getAR,                 //restituisce l'indirizzo del frame contenente l'id della dichiarazione
+				// seguendo la static chain (dell'access link)
+				STORE_TM,                  //setta il valore poppato nella temporary memory (con l'obiettivo di duplicare la cima dello stack
+				LOAD_TM,                   //carica l'Access Link (il puntatore al frame dell'id della dichiarazione della funzione
+				LOAD_TM,                   //duplica la cima dello stack
+				loadARAddress,
+				PUSH + n.entry.offset,
+				ADD,                       //calcola l'indirizzo dell'id della dichiarazione
+				LOAD_WORD,                 //carica l'indirizzo dell'id della funzione
+				JUMP_SUBROUTINE            //saltare all'indirizzo a cui abbiamo fatto la pop (salvando l'indirizzo alla seguente istruzione nel return address
+		);
     }
 
     @Override
@@ -244,7 +254,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				PUSH + 0,                             //se è maggiore pusha 0 (false) nella cima dello stack
 				BRANCH + endLabel,                    //e termina, saltando alla endLabel
 				trueLabel + ":",                      //se è minore uguale
-				PUSH + "1",                           //pusha 1 (true) nella cima dello stack
+				PUSH + 1,                           //pusha 1 (true) nella cima dello stack
 				endLabel + ":"                        //termina
 		);
 	}
@@ -327,28 +337,28 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(ClassNode node) {
 		if (this.print) this.printNode(node, node.classId);
 
-		final List<String> dispatchTable = new ArrayList<>();
-        this.dispatchTableList.add(dispatchTable);
+		final List<String> dispatchTable2 = new ArrayList<>();
+        this.dispatchTableList.add(dispatchTable2);
 
 		final boolean isSubclass = node.superEntry != null;
 		if (isSubclass) {
 			final List<String> superDispatchTable = this.dispatchTableList.get(-node.superEntry.offset - 2);
-			dispatchTable.addAll(superDispatchTable);
+			dispatchTable2.addAll(superDispatchTable);
 		}
 
 		for (final MethodNode methodEntry : node.methodList) {
             this.visit(methodEntry);
 
-			final boolean isOverriding = methodEntry.offset < dispatchTable.size();
+			final boolean isOverriding = methodEntry.offset < dispatchTable2.size();
 			if (isOverriding) {
-				dispatchTable.set(methodEntry.offset, methodEntry.label);
+				dispatchTable2.set(methodEntry.offset, methodEntry.label);
 			} else {
-				dispatchTable.add(methodEntry.label);
+				dispatchTable2.add(methodEntry.label);
 			}
 		}
 
 		String dispatchTableHeapCode = "";
-		for (final String label : dispatchTable) {
+		for (final String label : dispatchTable2) {
 			dispatchTableHeapCode = nlJoin(
 					dispatchTableHeapCode,          //memorizza l'etichetta del metodo nel'heap
 					PUSH + label,                          //pusha l'etichetta del metodo
@@ -367,21 +377,28 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 * Genera il codice per il nodo MethodNode.
+	 *
+	 * @param node il nodo MethodNode
+	 * @return il codice generato per il nodo MethodNode
+	 */
 	@Override
 	public String visitNode(MethodNode node) {
 		if (this.print) this.printNode(node);
 
-		String declarationCode = null;
-		String popDeclarationCode = null;
-		String popParameterCode = null;
+		String declarationsCode = null;
+		String popDeclarationsCode = null;
+		String popParametersCode = null;
 
 		for (final DecNode declaration : node.declarationList) {
-			declarationCode = nlJoin(declarationCode, this.visit(declaration));
-			popDeclarationCode = nlJoin(popDeclarationCode, POP);
+			declarationsCode = nlJoin(declarationsCode, this.visit(declaration));
+			popDeclarationsCode = nlJoin(popDeclarationsCode, POP);
 		}
 
-		for (final ParNode ignored : node.parameterList) popParameterCode = nlJoin(popParameterCode, POP);
-
+		for (final ParNode ignored : node.parameterList) {
+			popParametersCode = nlJoin(popParametersCode, POP);
+		}
 
 		String methodLabel = freshFunLabel();
 		node.label = methodLabel;
@@ -391,13 +408,13 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 						methodLabel + ":",
 						COPY_FP,                    //setta il frame-pointer con il valore dello stack-pointer
 						LOAD_RA,                    //carica il valore del return address
-						declarationCode,           // genera il codice per le dichiarazioni locali usando un nuovo frame pointer
+						declarationsCode,           // genera il codice per le dichiarazioni locali usando un nuovo frame pointer
                         this.visit(node.exp),            //genera il codice per il corpo dell'espressione della funzione
 						STORE_TM,                   //setta la memoria temporanea al valore poppato, quindi con il risultato della funzione
-						popDeclarationCode,        //rimuove le dichiarazioni locali dallo stack
+						popDeclarationsCode,        //rimuove le dichiarazioni locali dallo stack
 						STORE_RA,                   //setta il return address al valore poppato
 						POP,                        //rimuove l'Access Link dallo stack
-						popParameterCode,          //rimuove il parametri dallo stack
+						popParametersCode,          //rimuove il parametri dallo stack
 						STORE_FP,                   //setta il frame pointer al valore poppato, ovvero il control Link
 						LOAD_TM,                    //carica il valore della memoria temporanea con il risultato della funzione
 						LOAD_RA,                    //carica il valore nel return access
@@ -449,7 +466,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	@Override
 	public String visitNode(EmptyNode n) {
 		if (this.print) this.printNode(n);
-		return PUSH + -1;
+		return PUSH + "-1";
 	}
 
 	@Override
