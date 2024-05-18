@@ -145,14 +145,14 @@ push -8
 add
 lw
 push -1
-beq label10
-beq  0
-b label11
-label10:
-push  1
-label11:
+beq label40
+push 0
+b label41
+label40:
 push 1
-beq label8
+label41:
+push 1
+beq label38
 lfp
 lfp
 push -8
@@ -166,10 +166,10 @@ push 0
 add
 lw
 js
-b label9
-label8:
+b label39
+label38:
 push 0
-label9:
+label39:
 print
 halt
 
@@ -252,17 +252,17 @@ add
 lw
 js
 add
-bleq label2
+bleq label32
 push 0
-b label3
-label2:
+b label33
+label32:
 push 1
-label3:
+label33:
 push 1
-beq label0
+beq label30
 push -1
-b label1
-label0:
+b label31
+label30:
 
 lfp
 lfp
@@ -294,7 +294,7 @@ lhp
 push 1
 add
 shp
-label1:
+label31:
 stm
 sra
 pop
@@ -321,17 +321,17 @@ push 0
 add
 lw
 js
-bleq label6
+bleq label36
 push 0
-b label7
-label6:
+b label37
+label36:
 push 1
-label7:
+label37:
 push 1
-beq label4
+beq label34
 push -1
-b label5
-label4:
+b label35
+label34:
 
 lfp
 lfp
@@ -383,7 +383,7 @@ lhp
 push 1
 add
 shp
-label5:
+label35:
 stm
 sra
 pop
