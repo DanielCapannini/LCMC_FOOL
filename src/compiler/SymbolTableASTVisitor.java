@@ -1,7 +1,6 @@
 package compiler;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import compiler.AST.*;
 import compiler.exc.*;
@@ -28,7 +27,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	public int stErrors=0;
 
 	public SymbolTableASTVisitor() {}
-	SymbolTableASTVisitor(boolean debug) {super(debug);} // enables print for debugging
 
 	private STentry stLookup(String id) {
 		int j = this.nestingLevel;
@@ -403,7 +401,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			}
 		}
 		for (Node declaration : node.declarationList) this.visit(declaration);
-        this.visit(node.exp);
+        this.visit(node.expression);
 
 		// Remove the current nesting level symbolTable.
 		// Rimuove il corrente nesting level della symbol table
@@ -429,7 +427,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			System.out.println("Object id " + node.objectId + " was not declared");
             this.stErrors++;
 		} else if (entry.type instanceof final RefTypeNode refTypeNode) {
-			node.entry = entry;
+			node.symbolTableEntry = entry;
 			node.nestingLevel = this.nestingLevel;
 			final VirtualTable virtualTable = this.classTable.get(refTypeNode.typeId);
 			if (virtualTable.containsKey(node.methodId)) {
@@ -456,7 +454,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		}
 
 
-		node.entry = this.symbolTable.get(0).get(node.classId);
+		node.classSymbolTableEntry = this.symbolTable.get(0).get(node.classId);
 		for (Node argument : node.argumentList) this.visit(argument);
 		return null;
 	}
