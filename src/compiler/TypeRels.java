@@ -33,13 +33,6 @@ public class TypeRels {
 		return superTypes(firstRefTypeNode.typeId).anyMatch(secondRefTypeNode.typeId::equals);
 	}
 
-	public static boolean isSubtype(TypeNode first, TypeNode second) {
-		return isBoolAndInt(first, second)
-				|| isEmptyTypeAndRefType(first, second)
-				|| isSubclass(first, second)
-				|| isMethodOverride(first, second);
-	}
-
 	public static boolean isSupertype(final TypeNode first, final TypeNode second) {
 		return isSubtype(second, first);
 	}
@@ -49,20 +42,24 @@ public class TypeRels {
 				!(second instanceof ArrowTypeNode secondArrowTypeNode)) {
 			return false;
 		}
-
 		// Covariance of return type
 		if (!isSubtype(firstArrowTypeNode.returnType, secondArrowTypeNode.returnType)) {
 			return false;
 		}
-
 		// Contravariance of parameters
 		for (TypeNode parameterType : firstArrowTypeNode.parameterList) {
 			if (!isSupertype(secondArrowTypeNode.returnType, parameterType)) {
 				return false;
 			}
 		}
+        return firstArrowTypeNode.parameterList.size() == secondArrowTypeNode.parameterList.size();
+    }
 
-		return true;
+	public static boolean isSubtype(TypeNode first, TypeNode second) {
+		return isBoolAndInt(first, second)
+				|| isEmptyTypeAndRefType(first, second)
+				|| isSubclass(first, second)
+				|| isMethodOverride(first, second);
 	}
 
 	public static TypeNode lowestCommonAncestor(final TypeNode first, final TypeNode second) {
