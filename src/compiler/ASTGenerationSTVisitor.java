@@ -30,7 +30,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	public Node visit(ParseTree t) {
     	if (t==null) return null;
         String temp= this.indent;
-        this.indent =(this.indent ==null)?"": this.indent +"  ";
+        this.indent = (this.indent ==null)? "" : this.indent + "  ";
         Node result = super.visit(t);
         this.indent =temp;
         return result; 
