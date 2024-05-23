@@ -357,10 +357,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			}
 		}
 
-		String dispatchTableHeapCode = "";
+		String createDispatchTable = "";
 		for (final String label : dispatchTable2) {
-			dispatchTableHeapCode = nlJoin(
-					dispatchTableHeapCode,          //memorizza l'etichetta del metodo nel'heap
+			createDispatchTable = nlJoin(
+					createDispatchTable,          //memorizza l'etichetta del metodo nel'heap
 					PUSH + label,                          //pusha l'etichetta del metodo
 					LOAD_HEAP_POINTER,                     //pusha il puntatore dell'heap
 					STORE_WORD,                            //memorizza l'etichetta del metodo nell'heap
@@ -373,7 +373,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 		return nlJoin(
 				LOAD_HEAP_POINTER,
-				dispatchTableHeapCode
+				createDispatchTable
 		);
 	}
 
@@ -403,7 +403,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 						COPY_FP,                    //setta il frame-pointer con il valore dello stack-pointer
 						LOAD_RA,                    //carica il valore del return address
 						declarationsCode,           // genera il codice per le dichiarazioni locali usando un nuovo frame pointer
-                        this.visit(node.exp),            //genera il codice per il corpo dell'espressione della funzione
+                        this.visit(node.expression),            //genera il codice per il corpo dell'espressione della funzione
 						STORE_TM,                   //setta la memoria temporanea al valore poppato, quindi con il risultato della funzione
 						popDeclarationsCode,        //rimuove le dichiarazioni locali dallo stack
 						STORE_RA,                   //setta il return address al valore poppato
@@ -444,7 +444,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		return nlJoin(
 				argumentsCode,                          //Aggiunge il codice per valutare gli argomenti
 				moveArgumentsOnHeapCode,                       //Aggiunge il codice per spostare gli argomenti sull'heap
-				PUSH + (ExecuteVM.MEMSIZE + node.entry.offset),//Pusha l'indirizzo dell'entry point nella VM
+				PUSH + (ExecuteVM.MEMSIZE + node.classSymbolTableEntry.offset),//Pusha l'indirizzo dell'entry point nella VM
 				LOAD_WORD,                                     //Carica il valore dall'indirizzo specificato (entry point)
 				LOAD_HEAP_POINTER,                             //Carica il puntatore all'heap
 				STORE_WORD,                                    //Memorizza il valore (entry point) nell'heap
@@ -474,7 +474,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			argumentCode = nlJoin(argumentCode, this.visit(node.argumentList.get(i)));
 		}
 
-		for (int i = 0; i < node.nestingLevel - node.entry.nl; i++) {
+		for (int i = 0; i < node.nestingLevel - node.symbolTableEntry.nl; i++) {
 			getARCode = nlJoin(getARCode, LOAD_WORD);
 		}
 
@@ -483,7 +483,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				argumentCode,              //Genera il codice per le espressioni degli argomenti nell'ordine invertito
 				LOAD_FP, getARCode,         //Recupera l'indirizzo del frame che contiene la dichiarazione di "id"
 				//seguendo la catena statica (degli Access Links)
-				PUSH + node.entry.offset,
+				PUSH + node.symbolTableEntry.offset,
 				ADD,                        //Calcola l'indirizzo della dichiarazione di "id"
 				LOAD_WORD,                  //Carica l'indirizzo della funzione "id"
 				STORE_TM,                   //Imposta la memoria temporanea al valore estratto (con l'obiettivo di duplicare la cima dello stack)
