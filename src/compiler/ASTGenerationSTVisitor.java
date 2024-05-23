@@ -11,21 +11,12 @@ import compiler.FOOLParser.*;
 import compiler.lib.*;
 import static compiler.lib.FOOLlib.*;
 
-/**
- *  ASTGenerationSTVisitor: genera un AST del linguaggio a partire dal ”ParseTree”
- *  (che viene generato dalla classe ”FOOLParser”).
- *
- * @print true: stampa, false: non stampa
- * @indent stringa di spazi bianchi per l'indentazione
- */
 public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 	String indent;
     public boolean print;
 	
     public ASTGenerationSTVisitor() {}
-    ASTGenerationSTVisitor(boolean debug) {
-        this.print =debug; }
         
     private void printVarAndProdName(ParserRuleContext ctx) {
         String prefix="";        
@@ -46,220 +37,214 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	}
 
 	@Override
-	public Node visitProg(ProgContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		return this.visit(c.progbody());
+	public Node visitProg(ProgContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		return this.visit(Context.progbody());
 	}
 
 	@Override
-	public Node visitLetInProg(LetInProgContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		final List<DecNode> classDeclarationList = c.cldec().stream()
+	public Node visitLetInProg(LetInProgContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		final List<DecNode> classDeclarationList = Context.cldec().stream()
 				.map(this::visit)
 				.map(node -> (DecNode) node)
 				.collect(Collectors.toList());
-		final List<DecNode> declarationList = c.dec().stream()
+		final List<DecNode> declarationList = Context.dec().stream()
 				.map(this::visit)
 				.map(node -> (DecNode) node)
 				.collect(Collectors.toList());
 		final List<DecNode> decList = new ArrayList<>();
 		decList.addAll(classDeclarationList);
 		decList.addAll(declarationList);
-		return new ProgLetInNode(decList, this.visit(c.exp()));
+		return new ProgLetInNode(decList, this.visit(Context.exp()));
 	}
 
 	@Override
-	public Node visitNoDecProg(NoDecProgContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		return new ProgNode(this.visit(c.exp()));
+	public Node visitNoDecProg(NoDecProgContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		return new ProgNode(this.visit(Context.exp()));
 	}
 
 	@Override
-	public Node visitVardec(VardecContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitVardec(VardecContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 		Node n = null;
-		if (c.ID()!=null) {
-			n = new VarNode(c.ID().getText(), (TypeNode) this.visit(c.type()), this.visit(c.exp()));
-			n.setLine(c.VAR().getSymbol().getLine());
+		if (Context.ID()!=null) {
+			n = new VarNode(Context.ID().getText(), (TypeNode) this.visit(Context.type()), this.visit(Context.exp()));
+			n.setLine(Context.VAR().getSymbol().getLine());
 		}
         return n;
 	}
 
 	@Override
-	public Node visitFundec(FundecContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		if (c.ID().isEmpty()) return null;
+	public Node visitFundec(FundecContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		if (Context.ID().isEmpty()) return null;
 
 		List<ParNode> parametersList = new ArrayList<>();
-		for (int i = 1; i < c.ID().size(); i++) {
-			ParNode p = new ParNode(c.ID(i).getText(), (TypeNode) this.visit(c.type(i)));
-			p.setLine(c.ID(i).getSymbol().getLine());
+		for (int i = 1; i < Context.ID().size(); i++) {
+			ParNode p = new ParNode(Context.ID(i).getText(), (TypeNode) this.visit(Context.type(i)));
+			p.setLine(Context.ID(i).getSymbol().getLine());
 			parametersList.add(p);
 		}
 
-		final List<DecNode> declarationsList = c.dec().stream()
+		final List<DecNode> declarationsList = Context.dec().stream()
 				.map(dec -> (DecNode) this.visit(dec))
 				.collect(Collectors.toList());
 
-		final String id = c.ID(0).getText();
-		final TypeNode type = (TypeNode) this.visit(c.type(0));
-		final FunNode node = new FunNode(id, type, parametersList, declarationsList, this.visit(c.exp()));
-		node.setLine(c.FUN().getSymbol().getLine());
+		final String id = Context.ID(0).getText();
+		final TypeNode type = (TypeNode) this.visit(Context.type(0));
+		final FunNode node = new FunNode(id, type, parametersList, declarationsList, this.visit(Context.exp()));
+		node.setLine(Context.FUN().getSymbol().getLine());
 		return node;
 	}
 
 	@Override
-	public Node visitTimesDiv(TimesDivContext c){
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitTimesDiv(TimesDivContext Context){
+		if (this.print) this.printVarAndProdName(Context);
 
-		if (c.TIMES() != null) {
-			Node n = new TimesNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.TIMES().getSymbol().getLine());        // setLine added
+		if (Context.TIMES() != null) {
+			Node n = new TimesNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.TIMES().getSymbol().getLine());        // setLine added
 			return n;
 		} else {
-			Node n = new DivNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.DIV().getSymbol().getLine());        // setLine added
+			Node n = new DivNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.DIV().getSymbol().getLine());        // setLine added
 			return n;
 		}
 	}
 
 	@Override
-	public Node visitPlusMinus(PlusMinusContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitPlusMinus(PlusMinusContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 
-		if (c.PLUS() != null) {
-			Node n = new PlusNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.PLUS().getSymbol().getLine());        // setLine added
+		if (Context.PLUS() != null) {
+			Node n = new PlusNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.PLUS().getSymbol().getLine());        // setLine added
 			return n;
 		} else {
-			Node n = new MinusNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.MINUS().getSymbol().getLine());        // setLine added
+			Node n = new MinusNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.MINUS().getSymbol().getLine());        // setLine added
 			return n;
 		}
 	}
 
 	@Override
-	public Node visitComp(CompContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitComp(CompContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 
-		if (c.EQ() != null) {
-			Node n = new EqualNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.EQ().getSymbol().getLine());
+		if (Context.EQ() != null) {
+			Node n = new EqualNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.EQ().getSymbol().getLine());
 			return n;
-		} else if (c.LE() != null) {
-			Node n = new LessEqualNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.LE().getSymbol().getLine());
+		} else if (Context.LE() != null) {
+			Node n = new LessEqualNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.LE().getSymbol().getLine());
 			return n;
 		} else {
-			Node n = new GreaterEqualNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.GE().getSymbol().getLine());
+			Node n = new GreaterEqualNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.GE().getSymbol().getLine());
 			return n;
 		}
 	}
 
 	@Override
-	public Node visitAndOr(AndOrContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitAndOr(AndOrContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 
-		if (c.OR() != null) {
-			Node n = new OrNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.OR().getSymbol().getLine());
+		if (Context.OR() != null) {
+			Node n = new OrNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.OR().getSymbol().getLine());
 			return n;
 		} else {
-			Node n = new AndNode(this.visit(c.exp(0)), this.visit(c.exp(1)));
-			n.setLine(c.AND().getSymbol().getLine());
+			Node n = new AndNode(this.visit(Context.exp(0)), this.visit(Context.exp(1)));
+			n.setLine(Context.AND().getSymbol().getLine());
 			return n;
 		}
 	}
 
 	@Override
-	public Node visitNot(NotContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		Node n = new NotNode(this.visit(c.exp()));
-		n.setLine(c.NOT().getSymbol().getLine());
+	public Node visitNot(NotContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		Node n = new NotNode(this.visit(Context.exp()));
+		n.setLine(Context.NOT().getSymbol().getLine());
 		return n;
 	}
 
 	@Override
-	public Node visitIntType(IntTypeContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitIntType(IntTypeContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 		return new IntTypeNode();
 	}
 
 	@Override
-	public Node visitBoolType(BoolTypeContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitBoolType(BoolTypeContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 		return new BoolTypeNode();
 	}
 
 	@Override
-	public Node visitInteger(IntegerContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		int v = Integer.parseInt(c.NUM().getText());
-		return new IntNode(c.MINUS()==null?v:-v);
+	public Node visitInteger(IntegerContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		int v = Integer.parseInt(Context.NUM().getText());
+		return new IntNode(Context.MINUS()==null?v:-v);
 	}
 
 	@Override
-	public Node visitTrue(TrueContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitTrue(TrueContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 		return new BoolNode(true);
 	}
 
 	@Override
-	public Node visitFalse(FalseContext c) {
-		if (this.print) this.printVarAndProdName(c);
+	public Node visitFalse(FalseContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
 		return new BoolNode(false);
 	}
 
 	@Override
-	public Node visitIf(IfContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		Node ifNode = this.visit(c.exp(0));
-		Node thenNode = this.visit(c.exp(1));
-		Node elseNode = this.visit(c.exp(2));
+	public Node visitIf(IfContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		Node ifNode = this.visit(Context.exp(0));
+		Node thenNode = this.visit(Context.exp(1));
+		Node elseNode = this.visit(Context.exp(2));
 		Node n = new IfNode(ifNode, thenNode, elseNode);
-		n.setLine(c.IF().getSymbol().getLine());			
+		n.setLine(Context.IF().getSymbol().getLine());
         return n;		
 	}
 
 	@Override
-	public Node visitPrint(PrintContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		return new PrintNode(this.visit(c.exp()));
+	public Node visitPrint(PrintContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		return new PrintNode(this.visit(Context.exp()));
 	}
 
 	@Override
-	public Node visitPars(ParsContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		return this.visit(c.exp());
+	public Node visitPars(ParsContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		return this.visit(Context.exp());
 	}
 
 	@Override
-	public Node visitId(IdContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		Node n = new IdNode(c.ID().getText());
-		n.setLine(c.ID().getSymbol().getLine());
+	public Node visitId(IdContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		Node n = new IdNode(Context.ID().getText());
+		n.setLine(Context.ID().getSymbol().getLine());
 		return n;
 	}
 
 	@Override
-	public Node visitCall(CallContext c) {
-		if (this.print) this.printVarAndProdName(c);
-		List<Node> arglist = c.exp().stream().map(this::visit).collect(Collectors.toList());
+	public Node visitCall(CallContext Context) {
+		if (this.print) this.printVarAndProdName(Context);
+		List<Node> arglist = Context.exp().stream().map(this::visit).collect(Collectors.toList());
 
-		Node n = new CallNode(c.ID().getText(), arglist);
-		n.setLine(c.ID().getSymbol().getLine());
+		Node n = new CallNode(Context.ID().getText(), arglist);
+		n.setLine(Context.ID().getSymbol().getLine());
 		return n;
 	}
 
 	// OBJECT-ORIENTED EXTENSION
 
-	/**
-	 * Visita l'albero di parsing, se siamo nel contesto della dichiarazione di una classe
-	 *
-	 * @param context il contesto da visitare
-	 * @return un nodo del tipo ClassNode
-	 */
 	@Override
 	public Node visitCldec(final CldecContext context) {
 		if (this.print) this.printVarAndProdName(context);
@@ -288,12 +273,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	}
 
 
-	/**
-	 * Visita l'albero di parsing, se siamo nel contesto di un metodo di una funzione
-	 *
-	 * @param context il contesto da visitare
-	 * @return un nodo del tipo MethodNode
-	 */
+
 	@Override
 	public Node visitMethdec(final MethdecContext context) {
 		if (this.print) this.printVarAndProdName(context);
@@ -321,25 +301,12 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		return methodNode;
 	}
 
-
-	/**
-	 * Visita l'albero di parsing, se siamo nel contesto dell'espressione "null"
-	 *
-	 * @param context il contesto da visitare
-	 * @return un nodo del tipo EmptyNode
-	 */
 	@Override
 	public Node visitNull(final NullContext context) {
 		if (this.print) this.printVarAndProdName(context);
 		return new EmptyNode();
 	}
 
-	/**
-	 * Visita l'albero di parsing, se siamo nel contesto dell'espressione "."
-	 *
-	 * @param context il contesto da visitare
-	 * @return un nodo del tipo classCallNode
-	 */
 	@Override
 	public Node visitDotCall(final DotCallContext context) {
 		if (this.print) this.printVarAndProdName(context);
@@ -356,13 +323,6 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		return classCallNode;
 	}
 
-	/**
-	 * Visita l'albero di parsing, se siamo nel contesto dell'espressione "new"
-	 *
-	 * @param context il contesto da visitare
-	 * @return un nodo del tipo NewNode
-	 */
-
 	@Override
 	public Node visitNew(final NewContext context) {
 		if (this.print) this.printVarAndProdName(context);
@@ -378,13 +338,6 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		return newNode;
 	}
 
-	/**
-	 * Visita l'albero di parsing, se siamo nel contesto dell'identificativo del tipo di una classe
-	 *
-	 * @param context il contesto da visitare
-	 * @return un nodo del tipo IdTypeNode
-	 */
-
 	@Override
 	public Node visitIdType(final IdTypeContext context) {
 		if (this.print) this.printVarAndProdName(context);
@@ -395,4 +348,3 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		return node;
 	}
 }
-
