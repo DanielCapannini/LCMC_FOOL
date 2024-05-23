@@ -55,7 +55,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(FunNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
         this.visitNodeList(node.declarationlist);
-		if ( !isSubtype(this.visit(node.exp), this.ckvisit(node.retType)) )
+		if ( !isSubtype(this.visit(node.expression), this.ckvisit(node.returnType)) )
 			throw new TypeException("Wrong return type for function " + node.id,node.getLine());
 		return null;
 	}
@@ -63,7 +63,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(VarNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
-		if ( !isSubtype(this.visit(node.exp), this.ckvisit(node.getType())) )
+		if ( !isSubtype(this.visit(node.expression), this.ckvisit(node.getType())) )
 			throw new TypeException("Incompatible value for variable " + node.id,node.getLine());
 		return null;
 	}
@@ -71,7 +71,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(PrintNode node) throws TypeException {
 		if (this.print) this.printNode(node);
-		return this.visit(node.exp);
+		return this.visit(node.expression);
 	}
 
 	@Override
@@ -239,7 +239,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(NotNode node) throws TypeException {
 		if (this.print) this.printNode(node);
-		if (!(isSubtype(this.visit(node.exp), new BoolTypeNode())))
+		if (!(isSubtype(this.visit(node.expression), new BoolTypeNode())))
 			throw new TypeException("Non boolean in not", node.getLine());
 		return new BoolTypeNode();
 	}
