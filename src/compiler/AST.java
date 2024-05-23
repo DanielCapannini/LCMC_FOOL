@@ -518,7 +518,7 @@ public class AST {
 		final TypeNode returnType;
 		final List<ParNode> parameterList;
 		final List<DecNode> declarationList;
-		final Node exp;
+		final Node expression;
 		int offset = 0;
 
 		String label;
@@ -528,7 +528,7 @@ public class AST {
 			this.returnType = rt;
 			this.parameterList = pl;
 			this.declarationList = dl;
-			this.exp = e;
+			this.expression = e;
 		}
 
 		@Override
@@ -550,7 +550,7 @@ public class AST {
 	public static class ClassCallNode extends Node {
 		final String objectId;
 		final List<Node> argumentList;
-		STentry entry;
+		STentry symbolTableEntry;
 		final String methodId;
 		STentry methodEntry;
 		int nestingLevel;
@@ -577,7 +577,7 @@ public class AST {
 	public static class NewNode extends Node {
 		final String classId;
 		final List<Node> argumentList;
-		STentry entry;
+		STentry classSymbolTableEntry;
 
 		NewNode(String id, final List<Node> args) {
 			this.classId = id;
