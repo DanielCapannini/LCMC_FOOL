@@ -82,7 +82,10 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		TypeNode elseNode = this.visit(node.elseNode);
 		if (isSubtype(thenNode, elseNode)) return elseNode;
 		if (isSubtype(elseNode, thenNode)) return thenNode;
-		throw new TypeException("Incompatible types in then-else branches",node.getLine());
+		final TypeNode returnType = lowestCommonAncestor(thenNode, elseNode);
+		if (returnType == null)
+			throw new TypeException("Incompatible types in then-else branches", node.getLine());
+		return returnType;
 	}
 
 	@Override
