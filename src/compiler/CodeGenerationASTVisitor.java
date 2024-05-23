@@ -35,14 +35,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	private static final String LOAD_HEAP_POINTER = "lhp";
 	private static final String STORE_WORD = "sw";
 	private static final String STORE_HP = "shp";
-	private final List<List<String>> dispatchTableList = new ArrayList<>();
+	private final List<List<String>> dispatchTables = new ArrayList<>();
 
     public CodeGenerationASTVisitor() {
     }
-
-    CodeGenerationASTVisitor(boolean debug) {
-        super(false, debug);
-    } //enables print for debugging
 
     @Override
     public String visitNode(ProgLetInNode n) {
@@ -71,37 +67,35 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     public String visitNode(FunNode n) {
 		if (this.print) this.printNode(n, n.id);
 		String declarationListCode = null;
-		String popDeclaration = null;
-		String popParameter = null;
-
+		String popDeclarationsList = null;
+		String popParametersList = null;
 		for (Node declaration : n.declarationlist) {
 			declarationListCode = nlJoin(declarationListCode, this.visit(declaration));
-			popDeclaration = nlJoin(popDeclaration, POP);
+			popDeclarationsList = nlJoin(popDeclarationsList, POP);
 		}
-
 		for (final ParNode ignored : n.parameterlist) {
-			popParameter = nlJoin(popParameter, POP);
+			popParametersList = nlJoin(popParametersList, POP);
 		}
-        String funl = freshFunLabel();
+        String functionLabel = freshFunLabel();
         putCode(
                 nlJoin(
-                        funl + ":",
+                        functionLabel + ":",
                         COPY_FP, // set $fp to $sp value
                         LOAD_RA, // load $ra value
                         declarationListCode, // generate code for local declarations (they use the new $fp!!!)
                         this.visit(n.exp), // generate code for function body expression
                         STORE_TM, // set $tm to popped value (function result)
-                        popDeclaration, // remove local declarations from stack
+                        popDeclarationsList, // remove local declarations from stack
                         STORE_RA, // set $ra to popped value
                         POP, // remove Access Link from stack
-                        popParameter, // remove parameters from stack
+                        popParametersList, // remove parameters from stack
                         STORE_FP, // set $fp to popped value (Control Link)
                         LOAD_FP, // load $tm value (function result)
                         LOAD_RA, // load $ra value
                         JUMP_SUBROUTINE  // jump to to popped address
                 )
         );
-        return PUSH + funl;
+        return PUSH + functionLabel;
     }
 
     @Override
@@ -337,28 +331,27 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(ClassNode node) {
 		if (this.print) this.printNode(node, node.classId);
 
-		final List<String> dispatchTable2 = new ArrayList<>();
-        this.dispatchTableList.add(dispatchTable2);
+		final List<String> dispatchTable = new ArrayList<>();
+        this.dispatchTables.add(dispatchTable);
 
 		final boolean isSubclass = node.superEntry != null;
 		if (isSubclass) {
-			final List<String> superDispatchTable = this.dispatchTableList.get(-node.superEntry.offset - 2);
-			dispatchTable2.addAll(superDispatchTable);
+			final List<String> superDispatchTable = this.dispatchTables.get(-node.superEntry.offset - 2);
+			dispatchTable.addAll(superDispatchTable);
 		}
 
 		for (final MethodNode methodEntry : node.methodList) {
             this.visit(methodEntry);
 
-			final boolean isOverriding = methodEntry.offset < dispatchTable2.size();
+			final boolean isOverriding = methodEntry.offset < dispatchTable.size();
 			if (isOverriding) {
-				dispatchTable2.set(methodEntry.offset, methodEntry.label);
+				dispatchTable.set(methodEntry.offset, methodEntry.label);
 			} else {
-				dispatchTable2.add(methodEntry.label);
+				dispatchTable.add(methodEntry.label);
 			}
 		}
-
-		String createDispatchTable = "";
-		for (final String label : dispatchTable2) {
+		String createDispatchTable = null;
+		for (final String label : dispatchTable) {
 			createDispatchTable = nlJoin(
 					createDispatchTable,          //memorizza l'etichetta del metodo nel'heap
 					PUSH + label,                          //pusha l'etichetta del metodo
@@ -370,7 +363,6 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 					STORE_HP                               //memorizza il puntatore dell'heap
 			);
 		}
-
 		return nlJoin(
 				LOAD_HEAP_POINTER,
 				createDispatchTable
@@ -380,35 +372,30 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	@Override
 	public String visitNode(MethodNode node) {
 		if (this.print) this.printNode(node);
-
-		String declarationsCode = null;
-		String popDeclarationsCode = null;
-		String popParametersCode = null;
-
+		String declarationListCode = null;
+		String popDeclarationsList = null;
+		String popParametersList = null;
 		for (final DecNode declaration : node.declarationList) {
-			declarationsCode = nlJoin(declarationsCode, this.visit(declaration));
-			popDeclarationsCode = nlJoin(popDeclarationsCode, POP);
+			declarationListCode = nlJoin(declarationListCode, this.visit(declaration));
+			popDeclarationsList = nlJoin(popDeclarationsList, POP);
 		}
-
 		for (final ParNode ignored : node.parameterList) {
-			popParametersCode = nlJoin(popParametersCode, POP);
+			popParametersList = nlJoin(popParametersList, POP);
 		}
-
 		String methodLabel = freshFunLabel();
 		node.label = methodLabel;
-
 		putCode(
 				nlJoin(
 						methodLabel + ":",
 						COPY_FP,                    //setta il frame-pointer con il valore dello stack-pointer
 						LOAD_RA,                    //carica il valore del return address
-						declarationsCode,           // genera il codice per le dichiarazioni locali usando un nuovo frame pointer
+						declarationListCode,           // genera il codice per le dichiarazioni locali usando un nuovo frame pointer
                         this.visit(node.expression),            //genera il codice per il corpo dell'espressione della funzione
 						STORE_TM,                   //setta la memoria temporanea al valore poppato, quindi con il risultato della funzione
-						popDeclarationsCode,        //rimuove le dichiarazioni locali dallo stack
+						popDeclarationsList,        //rimuove le dichiarazioni locali dallo stack
 						STORE_RA,                   //setta il return address al valore poppato
 						POP,                        //rimuove l'Access Link dallo stack
-						popParametersCode,          //rimuove il parametri dallo stack
+						popParametersList,          //rimuove il parametri dallo stack
 						STORE_FP,                   //setta il frame pointer al valore poppato, ovvero il control Link
 						LOAD_TM,                    //carica il valore della memoria temporanea con il risultato della funzione
 						LOAD_RA,                    //carica il valore nel return access
@@ -444,7 +431,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		return nlJoin(
 				argumentsCode,                          //Aggiunge il codice per valutare gli argomenti
 				moveArgumentsOnHeapCode,                       //Aggiunge il codice per spostare gli argomenti sull'heap
-				PUSH + (ExecuteVM.MEMSIZE + node.classSymbolTableEntry.offset),//Pusha l'indirizzo dell'entry point nella VM
+				PUSH + ExecuteVM.MEMSIZE,//Pusha l'indirizzo dell'entry point nella VM
+				PUSH + node.classSymbolTableEntry.offset,
+				ADD,
 				LOAD_WORD,                                     //Carica il valore dall'indirizzo specificato (entry point)
 				LOAD_HEAP_POINTER,                             //Carica il puntatore all'heap
 				STORE_WORD,                                    //Memorizza il valore (entry point) nell'heap
