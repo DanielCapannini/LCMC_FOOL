@@ -59,7 +59,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		Map<String, STentry> currentSymbolTable = this.symbolTable.get(this.nestingLevel);
 		List<TypeNode> parameterTypeList = new ArrayList<>();
 		for (ParNode par : node.parameterlist) parameterTypeList.add(par.getType());
-		STentry entry = new STentry(this.nestingLevel, new ArrowTypeNode(parameterTypeList,node.retType), this.decOffset--);
+		STentry entry = new STentry(this.nestingLevel, new ArrowTypeNode(parameterTypeList,node.returnType), this.decOffset--);
 		//inserimento di ID nella symtable
 		if (currentSymbolTable.put(node.id, entry) != null) {
 			System.out.println("Fun id " + node.id + " at line "+ node.getLine() +" already declared");
@@ -80,7 +80,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
                 this.stErrors++;
 			}
 		for (Node dec : node.declarationlist) this.visit(dec);
-        this.visit(node.exp);
+        this.visit(node.expression);
 		//rimuovere la hashmap corrente poiche' esco dallo scope               
         this.symbolTable.remove(this.nestingLevel--);
         this.decOffset =prevNLDecOffset; // restores counter for offset of declarations at previous nesting level
@@ -90,14 +90,14 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(NotNode node) {
 		if (this.print) this.printNode(node);
-        this.visit(node.exp);
+        this.visit(node.expression);
 		return null;
 	}
 	
 	@Override
 	public Void visitNode(VarNode n) {
 		if (this.print) this.printNode(n);
-        this.visit(n.exp);
+        this.visit(n.expression);
 		Map<String, STentry> currentSymbolTable = this.symbolTable.get(this.nestingLevel);
 		STentry entry = new STentry(this.nestingLevel,n.getType(), this.decOffset--);
 		//inserimento di ID nella symtable
@@ -111,7 +111,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(PrintNode n) {
 		if (this.print) this.printNode(n);
-        this.visit(n.exp);
+        this.visit(n.expression);
 		return null;
 	}
 
