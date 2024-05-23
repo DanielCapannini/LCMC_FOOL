@@ -81,7 +81,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
                         COPY_FP, // set $fp to $sp value
                         LOAD_RA, // load $ra value
                         declarationListCode, // generate code for local declarations (they use the new $fp!!!)
-                        this.visit(node.exp), // generate code for function body expression
+                        this.visit(node.expression), // generate code for function body expression
                         STORE_TM, // set $tm to popped value (function result)
                         popDeclarationsList, // remove local declarations from stack
                         STORE_RA, // set $ra to popped value
@@ -99,14 +99,14 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     @Override
     public String visitNode(VarNode node) {
         if (this.print) this.printNode(node, node.id);
-        return this.visit(node.exp);
+        return this.visit(node.expression);
     }
 
     @Override
     public String visitNode(PrintNode node) {
         if (this.print) this.printNode(node);
         return nlJoin(
-                this.visit(node.exp),
+                this.visit(node.expression),
                 PRINT
         );
     }
@@ -315,7 +315,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String itWasFalseLabel = freshLabel();
 		String endLabel = freshLabel();
 		return nlJoin(
-                this.visit(node.exp),             //visita il valore e lo pusha nella cima dello stack
+                this.visit(node.expression),             //visita il valore e lo pusha nella cima dello stack
 				PUSH + 0,                           //pusha 0
 				BRANCH_EQUAL + itWasFalseLabel,     //se la condizione è falsa salta all'etichetta itWasFalseLabel
 				PUSH + 0,                           //altrimenti pusha in cima allo stack 0, traendo che inizialmente la condizione era vera
