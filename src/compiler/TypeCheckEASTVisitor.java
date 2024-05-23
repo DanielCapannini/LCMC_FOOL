@@ -292,7 +292,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if (this.print) this.printNode(node, node.id);
         this.visitNodeList(node.declarationList);
 		// visit expression and check if it is a subtype of the return type
-		if (!isSubtype(this.visit(node.exp), this.ckvisit(node.returnType))) {
+		if (!isSubtype(this.visit(node.expression), this.ckvisit(node.returnType))) {
 			throw new TypeException("Wrong return type for method " + node.id, node.getLine());
 		}
 		return null;
@@ -334,7 +334,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(final NewNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.classId);
-		final TypeNode typeNode = this.visit(node.entry);
+		final TypeNode typeNode = this.visit(node.classSymbolTableEntry);
 		if (!(typeNode instanceof ClassTypeNode classTypeNode)) {
 			throw new TypeException("Invocation of a non-constructor " + node.classId, node.getLine());
 		}
