@@ -41,41 +41,39 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     }
 
     @Override
-    public String visitNode(ProgLetInNode n) {
-        if (this.print) this.printNode(n);
+    public String visitNode(ProgLetInNode node) {
+        if (this.print) this.printNode(node);
         String declarationCode = null;
-        for (Node dec : n.declarationlist) declarationCode = nlJoin(declarationCode, this.visit(dec));
+        for (Node dec : node.declarationlist) declarationCode = nlJoin(declarationCode, this.visit(dec));
         return nlJoin(
                 PUSH + 0,
                 declarationCode, // generate code for declarations (allocation)
-                this.visit(n.exp),
+                this.visit(node.exp),
                 HALT,
                 getCode()
         );
     }
 
     @Override
-    public String visitNode(ProgNode n) {
-        if (this.print) this.printNode(n);
+    public String visitNode(ProgNode node) {
+        if (this.print) this.printNode(node);
         return nlJoin(
-                this.visit(n.exp),
+                this.visit(node.exp),
                 HALT
         );
     }
 
     @Override
-    public String visitNode(FunNode n) {
-		if (this.print) this.printNode(n, n.id);
+    public String visitNode(FunNode node) {
+		if (this.print) this.printNode(node, node.id);
 		String declarationListCode = null;
 		String popDeclarationsList = null;
 		String popParametersList = null;
-		for (Node declaration : n.declarationlist) {
+		for (Node declaration : node.declarationlist) {
 			declarationListCode = nlJoin(declarationListCode, this.visit(declaration));
 			popDeclarationsList = nlJoin(popDeclarationsList, POP);
 		}
-		for (final ParNode ignored : n.parameterlist) {
-			popParametersList = nlJoin(popParametersList, POP);
-		}
+		for (final ParNode ignored : node.parameterlist) popParametersList = nlJoin(popParametersList, POP);
         String functionLabel = freshFunLabel();
         putCode(
                 nlJoin(
@@ -83,7 +81,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
                         COPY_FP, // set $fp to $sp value
                         LOAD_RA, // load $ra value
                         declarationListCode, // generate code for local declarations (they use the new $fp!!!)
-                        this.visit(n.exp), // generate code for function body expression
+                        this.visit(node.exp), // generate code for function body expression
                         STORE_TM, // set $tm to popped value (function result)
                         popDeclarationsList, // remove local declarations from stack
                         STORE_RA, // set $ra to popped value
@@ -99,45 +97,45 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     }
 
     @Override
-    public String visitNode(VarNode n) {
-        if (this.print) this.printNode(n, n.id);
-        return this.visit(n.exp);
+    public String visitNode(VarNode node) {
+        if (this.print) this.printNode(node, node.id);
+        return this.visit(node.exp);
     }
 
     @Override
-    public String visitNode(PrintNode n) {
-        if (this.print) this.printNode(n);
+    public String visitNode(PrintNode node) {
+        if (this.print) this.printNode(node);
         return nlJoin(
-                this.visit(n.exp),
+                this.visit(node.exp),
                 PRINT
         );
     }
 
     @Override
-    public String visitNode(IfNode n) {
-        if (this.print) this.printNode(n);
+    public String visitNode(IfNode node) {
+        if (this.print) this.printNode(node);
         String l1 = freshLabel();
         String l2 = freshLabel();
         return nlJoin(
-                this.visit(n.cond),
+                this.visit(node.cond),
                 PUSH + 1,
                 BRANCH_EQUAL + l1,
-                this.visit(n.elseNode),
+                this.visit(node.elseNode),
                 BRANCH + l2,
                 l1 + ":",
-                this.visit(n.thenNode),
+                this.visit(node.thenNode),
                 l2 + ":"
         );
     }
 
     @Override
-    public String visitNode(EqualNode n) {
-        if (this.print) this.printNode(n);
+    public String visitNode(EqualNode node) {
+        if (this.print) this.printNode(node);
         String trueLabel = freshLabel();
         String falseLabel = freshLabel();
         return nlJoin(
-                this.visit(n.left),
-                this.visit(n.right),
+                this.visit(node.left),
+                this.visit(node.right),
                 BRANCH_EQUAL + trueLabel,
                 PUSH + 0,
                 BRANCH + falseLabel,
@@ -148,32 +146,32 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     }
 
     @Override
-    public String visitNode(TimesNode n) {
-        if (this.print) this.printNode(n);
+    public String visitNode(TimesNode node) {
+        if (this.print) this.printNode(node);
         return nlJoin(
-                this.visit(n.left),
-                this.visit(n.right),
+                this.visit(node.left),
+                this.visit(node.right),
                 MULT
         );
     }
 
     @Override
-    public String visitNode(PlusNode n) {
-        if (this.print) this.printNode(n);
+    public String visitNode(PlusNode node) {
+        if (this.print) this.printNode(node);
         return nlJoin(
-                this.visit(n.left),
-                this.visit(n.right),
+                this.visit(node.left),
+                this.visit(node.right),
                 ADD
         );
     }
 
     @Override
-    public String visitNode(CallNode n) {
-        if (this.print) this.printNode(n, n.id);
+    public String visitNode(CallNode node) {
+        if (this.print) this.printNode(node, node.id);
         String argumentCode = null, getAR = null;
-		final String loadARAddress = n.entry.type instanceof MethodTypeNode ? LOAD_WORD : "";
-        for (int i = n.argumentList.size() - 1; i >= 0; i--) argumentCode = nlJoin(argumentCode, this.visit(n.argumentList.get(i)));
-        for (int i = 0; i < n.nestingLevel - n.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
+		final String loadARAddress = node.entry.type instanceof MethodTypeNode ? LOAD_WORD : "";
+        for (int i = node.argumentList.size() - 1; i >= 0; i--) argumentCode = nlJoin(argumentCode, this.visit(node.argumentList.get(i)));
+        for (int i = 0; i < node.nestingLevel - node.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
         return nlJoin(
 				LOAD_FP,            //carica il Control Link (che è un puntatore all'id del chiamante)
 				argumentCode,             //genera il codice per gli argomenti delle espressione in ordine inverso
@@ -184,7 +182,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				LOAD_TM,                   //carica l'Access Link (il puntatore al frame dell'id della dichiarazione della funzione
 				LOAD_TM,                   //duplica la cima dello stack
 				loadARAddress,
-				PUSH + n.entry.offset,
+				PUSH + node.entry.offset,
 				ADD,                       //calcola l'indirizzo dell'id della dichiarazione
 				LOAD_WORD,                 //carica l'indirizzo dell'id della funzione
 				JUMP_SUBROUTINE            //saltare all'indirizzo a cui abbiamo fatto la pop (salvando l'indirizzo alla seguente istruzione nel return address
@@ -192,28 +190,29 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     }
 
     @Override
-    public String visitNode(IdNode n) {
-        if (this.print) this.printNode(n, n.id);
+    public String visitNode(IdNode node) {
+        if (this.print) this.printNode(node, node.id);
         String getAR = null;
-        for (int i = 0; i < n.nestingLevel - n.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
+        for (int i = 0; i < node.nestingLevel - node.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
         return nlJoin(
                 LOAD_FP, getAR, // retrieve address of frame containing "id" declaration
                 // by following the static chain (of Access Links)
-                PUSH + n.entry.offset, ADD, // compute address of "id" declaration
+                PUSH + node.entry.offset,
+				ADD, // compute address of "id" declaration
                 LOAD_WORD // load value of "id" variable
         );
     }
 
     @Override
-    public String visitNode(BoolNode n) {
-        if (this.print) this.printNode(n, n.value.toString());
-        return PUSH + (n.value ? 1 : 0);
+    public String visitNode(BoolNode node) {
+        if (this.print) this.printNode(node, node.value.toString());
+        return PUSH + (node.value ? 1 : 0);
     }
 
     @Override
-    public String visitNode(IntNode n) {
-        if (this.print) this.printNode(n, n.value.toString());
-        return PUSH + n.value;
+    public String visitNode(IntNode node) {
+        if (this.print) this.printNode(node, node.value.toString());
+        return PUSH + node.value;
     }
 
 	@Override
@@ -330,25 +329,20 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	@Override
 	public String visitNode(ClassNode node) {
 		if (this.print) this.printNode(node, node.classId);
-
 		final List<String> dispatchTable = new ArrayList<>();
         this.dispatchTables.add(dispatchTable);
-
 		final boolean isSubclass = node.superEntry != null;
 		if (isSubclass) {
 			final List<String> superDispatchTable = this.dispatchTables.get(-node.superEntry.offset - 2);
 			dispatchTable.addAll(superDispatchTable);
 		}
-
 		for (final MethodNode methodEntry : node.methodList) {
             this.visit(methodEntry);
-
 			final boolean isOverriding = methodEntry.offset < dispatchTable.size();
-			if (isOverriding) {
+			if (isOverriding)
 				dispatchTable.set(methodEntry.offset, methodEntry.label);
-			} else {
+			else
 				dispatchTable.add(methodEntry.label);
-			}
 		}
 		String createDispatchTable = null;
 		for (final String label : dispatchTable) {
@@ -379,9 +373,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			declarationListCode = nlJoin(declarationListCode, this.visit(declaration));
 			popDeclarationsList = nlJoin(popDeclarationsList, POP);
 		}
-		for (final ParNode ignored : node.parameterList) {
-			popParametersList = nlJoin(popParametersList, POP);
-		}
+		for (final ParNode ignored : node.parameterList) popParametersList = nlJoin(popParametersList, POP);
 		String methodLabel = freshFunLabel();
 		node.label = methodLabel;
 		putCode(
@@ -408,17 +400,12 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	@Override
 	public String visitNode(NewNode node) {
 		if (this.print) this.printNode(node, node.classId);
-
-		String argumentsCode = "";
-		String moveArgumentsOnHeapCode = "";
-
-		for (final Node argument : node.argumentList) {
-			argumentsCode = nlJoin(argumentsCode, this.visit(argument));
-		}
-
+		String putArgumentsOnStack = "";
+		String loadArgumentsOnHeap = "";
+		for (final Node argument : node.argumentList) putArgumentsOnStack = nlJoin(putArgumentsOnStack, this.visit(argument));
 		for (final Node ignored : node.argumentList) {
-			moveArgumentsOnHeapCode = nlJoin(
-					moveArgumentsOnHeapCode,
+			loadArgumentsOnHeap = nlJoin(
+					loadArgumentsOnHeap,
 					LOAD_HEAP_POINTER,              //pusha il puntatore dell'heap
 					STORE_WORD,                     //memorizza l'etichetta della new nell'heap
 					LOAD_HEAP_POINTER,              //pusha il puntatore dell'heap
@@ -427,10 +414,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 					STORE_HP                        //lo memorizza sull'heap pointer
 			);
 		}
-
 		return nlJoin(
-				argumentsCode,                          //Aggiunge il codice per valutare gli argomenti
-				moveArgumentsOnHeapCode,                       //Aggiunge il codice per spostare gli argomenti sull'heap
+				putArgumentsOnStack,                          //Aggiunge il codice per valutare gli argomenti
+				loadArgumentsOnHeap,                       //Aggiunge il codice per spostare gli argomenti sull'heap
 				PUSH + ExecuteVM.MEMSIZE,//Pusha l'indirizzo dell'entry point nella VM
 				PUSH + node.classSymbolTableEntry.offset,
 				ADD,
@@ -443,30 +429,23 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				ADD,
 				STORE_HP                                       //Memorizza il nuovo valore del puntatore all'heap
 		);
-
 	}
 
 	@Override
-	public String visitNode(EmptyNode n) {
-		if (this.print) this.printNode(n);
-		return PUSH + "-1";
+	public String visitNode(EmptyNode node) {
+		if (this.print) this.printNode(node);
+		return PUSH + -1;
 	}
 
 	@Override
 	public String visitNode(ClassCallNode node) {
 		if (this.print) this.printNode(node, node.objectId);
-
 		String argumentCode = null;
 		String getARCode = null;
-
-		for (int i = node.argumentList.size() - 1; i >= 0; i--) {
+		for (int i = node.argumentList.size() - 1; i >= 0; i--)
 			argumentCode = nlJoin(argumentCode, this.visit(node.argumentList.get(i)));
-		}
-
-		for (int i = 0; i < node.nestingLevel - node.symbolTableEntry.nl; i++) {
+		for (int i = 0; i < node.nestingLevel - node.symbolTableEntry.nl; i++)
 			getARCode = nlJoin(getARCode, LOAD_WORD);
-		}
-
 		return nlJoin(
 				LOAD_FP,             //Carica il Control Link (puntatore al frame della funzione chiamante di "id")
 				argumentCode,              //Genera il codice per le espressioni degli argomenti nell'ordine invertito
@@ -484,6 +463,5 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				LOAD_WORD,                  //Carica l'indirizzo del metodo
 				JUMP_SUBROUTINE             //Salta all'indirizzo estratto (salvando l'indirizzo dell'istruzione successiva in $ra)
 		);
-
 	}
 }
