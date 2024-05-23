@@ -17,7 +17,6 @@ import static compiler.TypeRels.*;
 public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException> {
 
 	public TypeCheckEASTVisitor() { super(true); } // enables incomplete tree exceptions
-	TypeCheckEASTVisitor(boolean debug) { super(true,debug); } // enables print for debugging
 
 	//checks that a type object is visitable (not incomplete) 
 	private TypeNode ckvisit(TypeNode t) throws TypeException {
@@ -31,8 +30,9 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		for (Node dec : node.declarationlist)
 			try {
                 this.visit(dec);
-			} catch (IncomplException e) { 
-			} catch (TypeException e) {
+			} catch (IncomplException e) {
+                throw new RuntimeException(e);
+            } catch (TypeException e) {
 				System.out.println("Type checking error in a declaration: " + e.text);
 			}
 		return this.visit(node.exp);
@@ -50,8 +50,9 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		for (Node dec : node.declarationlist)
 			try {
                 this.visit(dec);
-			} catch (IncomplException e) { 
-			} catch (TypeException e) {
+			} catch (IncomplException e) {
+                throw new RuntimeException(e);
+            } catch (TypeException e) {
 				System.out.println("Type checking error in a declaration: " + e.text);
 			}
 		if ( !isSubtype(this.visit(node.exp), this.ckvisit(node.retType)) )
@@ -120,10 +121,9 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(CallNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
 		TypeNode t = this.visit(node.entry);
-		if ( !(t instanceof ArrowTypeNode) )
+		if ( !(t instanceof ArrowTypeNode arrowTypeNode) )
 			throw new TypeException("Invocation of a non-function "+node.id,node.getLine());
-		ArrowTypeNode arrowTypeNode = (ArrowTypeNode) t;
-		if ( !(arrowTypeNode.parameterList.size() == node.argumentList.size()) )
+        if ( !(arrowTypeNode.parameterList.size() == node.argumentList.size()) )
 			throw new TypeException("Wrong number of parameters in the invocation of "+node.id,node.getLine());
 		for (int i = 0; i < node.argumentList.size(); i++)
 			if ( !(isSubtype(this.visit(node.argumentList.get(i)),arrowTypeNode.parameterList.get(i))) )
@@ -249,7 +249,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if (this.print) this.printNode(node, node.classId);
 		final boolean isSubClass = node.superId.isPresent();
 		final String parent = isSubClass ? node.superId.get() : null;
-
 		if (!isSubClass) {
 			node.methodList.forEach(method -> {
 				try {
@@ -258,16 +257,13 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 					System.out.println("Type checking error in a class declaration: " + e.text);
 				}
 			});
-
 			return null;
 		}
-
 		// eredito, quindi aggiungo la mia classe in superType
 		superType.put(node.classId, parent);
 		final ClassTypeNode classType = (ClassTypeNode) node.getType();
 		//Otimizzazione 2
 		final ClassTypeNode superClassType = (ClassTypeNode) node.superEntry.type;
-
 		//CAMPI: controllo che gli overriding siano corretti.
 		//Per ogni campo calcolo la posizione che, in fields di superClassType,
 		//corrisponde al suo offset. Se la pos è < allora ovveriding e faccio il check sottotipo
@@ -278,7 +274,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 				throw new TypeException("Wrong type for field " + field.id, field.getLine());
 			}
 		}
-
 		//METODI: controllo che gli overriding siano corretti
 		//Per ogni metodo calcolo la posizione che, in methods di superClassType,
 		//corrisponde al suo offset. Se la pos è < allora ovveriding e faccio il check sottotipo
@@ -289,7 +284,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 				throw new TypeException("Wrong type for method " + method.id, method.getLine());
 			}
 		}
-
 		return null;
 	}
 
@@ -308,7 +302,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if (!isSubtype(this.visit(node.exp), this.ckvisit(node.returnType))) {
 			throw new TypeException("Wrong return type for method " + node.id, node.getLine());
 		}
-
 		return null;
 	}
 
@@ -321,34 +314,27 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(final ClassCallNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.objectId);
-
 		// return anticipato per evitare NullPointerException su ClassCallNode errato
 		if(Objects.isNull(node.methodEntry)) return null;
-
 		TypeNode type = this.visit(node.methodEntry);
-
 		// visit method, if it is a method type, get the functional type
 		if (type instanceof MethodTypeNode methodTypeNode) {
 			type = methodTypeNode.functionalType;
 		}
-
 		// if it is not an arrow type, throw an exception
 		if (!(type instanceof ArrowTypeNode arrowTypeNode)) {
 			throw new TypeException("Invocation of a non-function " + node.methodId, node.getLine());
 		}
-
 		// check if the number of parameters is correct
 		if (arrowTypeNode.parameterList.size() != node.argumentList.size()) {
 			throw new TypeException("Wrong number of parameters in the invocation of method " + node.methodId, node.getLine());
 		}
-
 		// check if the types of the parameters are correct
 		for (int i = 0; i < node.argumentList.size(); i++) {
 			if (!(isSubtype(this.visit(node.argumentList.get(i)), arrowTypeNode.parameterList.get(i)))) {
 				throw new TypeException("Wrong type for " + (i + 1) + "-th parameter in the invocation of method " + node.methodId, node.getLine());
 			}
 		}
-
 		return arrowTypeNode.returnType;
 	}
 
@@ -356,11 +342,9 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(final NewNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.classId);
 		final TypeNode typeNode = this.visit(node.entry);
-
 		if (!(typeNode instanceof ClassTypeNode classTypeNode)) {
 			throw new TypeException("Invocation of a non-constructor " + node.classId, node.getLine());
 		}
-
 		if (classTypeNode.fieldList.size() != node.argumentList.size()) {
 			throw new TypeException("Wrong number of parameters in the invocation of constructor " + node.classId, node.getLine());
 		}
