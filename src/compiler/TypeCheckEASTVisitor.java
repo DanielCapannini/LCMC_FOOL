@@ -4,6 +4,7 @@ import compiler.AST.*;
 import compiler.exc.*;
 import compiler.lib.*;
 
+import java.util.List;
 import java.util.Objects;
 
 import static compiler.TypeRels.*;
@@ -22,19 +23,25 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	private TypeNode ckvisit(TypeNode t) throws TypeException {
         this.visit(t);
 		return t;
-	} 
+	}
+
+	// Method to handle visit of declaration list with exception management
+	private void visitNodeList(List<DecNode> nodeList) throws TypeException {
+		for (Node dec : nodeList) {
+			try {
+				this.visit(dec);
+			} catch (IncomplException e) {
+				throw new RuntimeException(e);
+			} catch (TypeException e) {
+				System.out.println("Type checking error in a declaration: " + e.text);
+			}
+		}
+	}
 	
 	@Override
 	public TypeNode visitNode(ProgLetInNode node) throws TypeException {
 		if (this.print) this.printNode(node);
-		for (Node dec : node.declarationlist)
-			try {
-                this.visit(dec);
-			} catch (IncomplException e) {
-                throw new RuntimeException(e);
-            } catch (TypeException e) {
-				System.out.println("Type checking error in a declaration: " + e.text);
-			}
+        this.visitNodeList(node.declarationlist);
 		return this.visit(node.exp);
 	}
 
@@ -47,14 +54,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(FunNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
-		for (Node dec : node.declarationlist)
-			try {
-                this.visit(dec);
-			} catch (IncomplException e) {
-                throw new RuntimeException(e);
-            } catch (TypeException e) {
-				System.out.println("Type checking error in a declaration: " + e.text);
-			}
+        this.visitNodeList(node.declarationlist);
 		if ( !isSubtype(this.visit(node.exp), this.ckvisit(node.retType)) )
 			throw new TypeException("Wrong return type for function " + node.id,node.getLine());
 		return null;
@@ -250,13 +250,13 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		final boolean isSubClass = node.superId.isPresent();
 		final String parent = isSubClass ? node.superId.get() : null;
 		if (!isSubClass) {
-			node.methodList.forEach(method -> {
+			for(Node method : node.methodList) {
 				try {
 					this.visit(method);
 				} catch (TypeException e) {
 					System.out.println("Type checking error in a class declaration: " + e.text);
 				}
-			});
+			}
 			return null;
 		}
 		// eredito, quindi aggiungo la mia classe in superType
@@ -290,14 +290,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(final MethodNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.id);
-
-		for (final DecNode declaration : node.declarationList) {
-			try {
-				this.visit(declaration);
-			} catch (TypeException e) {
-				System.out.println("Type checking error in a method declaration: " + e.text);
-			}
-		}
+        this.visitNodeList(node.declarationList);
 		// visit expression and check if it is a subtype of the return type
 		if (!isSubtype(this.visit(node.exp), this.ckvisit(node.returnType))) {
 			throw new TypeException("Wrong return type for method " + node.id, node.getLine());
