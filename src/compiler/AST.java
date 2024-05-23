@@ -42,24 +42,23 @@ public class AST {
 	 *
 	 * @id nome della funzione
 	 * @returnType tipo di ritorno
-	 * @parameters lista dei parametri
-	 * @declarations lista delle dichiarazioni
-	 * @exp espressione principale
+	 * @parameterlist lista dei parametri
+	 * @declarationlist lista delle dichiarazioni
+	 * @expression espressione principale
 	 */
 	public static class FunNode extends DecNode {
 		final String id;
-		final TypeNode retType;
+		final TypeNode returnType;
 		final List<ParNode> parameterlist;
 		final List<DecNode> declarationlist;
-		final Node exp;
+		final Node expression;
 		FunNode(String i, TypeNode rt, List<ParNode> pl, List<DecNode> dl, Node e) {
-            this.id =i;
-            this.retType =rt;
-            this.parameterlist =Collections.unmodifiableList(pl);
-            this.declarationlist =Collections.unmodifiableList(dl);
-            this.exp =e;
+            this.id = i;
+            this.returnType = rt;
+            this.parameterlist = Collections.unmodifiableList(pl);
+            this.declarationlist = Collections.unmodifiableList(dl);
+            this.expression = e;
 	    }
-		
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
@@ -73,8 +72,8 @@ public class AST {
 		final String id;
 		ParNode(String i, TypeNode t) {
             this.id = i;
-            this.type = t;}
-
+            this.type = t;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
@@ -83,15 +82,15 @@ public class AST {
 	 * Nodo per la dichiarazione di una variabile
 	 *
 	 * @id nome della variabile
-	 * @exp espressione di inizializzazione
+	 * @expression espressione di inizializzazione
 	 */
 	public static class VarNode extends DecNode {
 		final String id;
-		final Node exp;
+		final Node expression;
 		VarNode(String i, TypeNode t, Node v) {
             this.id = i;
             this.type = t;
-            this.exp = v;}
+            this.expression = v;}
 
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
@@ -100,13 +99,13 @@ public class AST {
 	/**
 	 * Nodo per la stampa di un'espressione
 	 *
-	 * @exp espressione da stampare
+	 * @expression espressione da stampare
 	 */
 	public static class PrintNode extends Node {
-		final Node exp;
+		final Node expression;
 		PrintNode(Node e) {
-            this.exp = e;}
-
+            this.expression = e;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
@@ -125,14 +124,14 @@ public class AST {
 		IfNode(Node c, Node t, Node e) {
             this.cond = c;
             this.thenNode = t;
-            this.elseNode = e;}
-
+            this.elseNode = e;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
 	/**
-	 * Nodo per l'uguaglianza
+	 * Nodo per ==
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -142,14 +141,14 @@ public class AST {
 		final Node right;
 		EqualNode(Node l, Node r) {
             this.left = l;
-            this.right = r;}
-
+            this.right = r;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
 	/**
-	 * Nodo per la moltiplicazione
+	 * Nodo per la *
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -159,14 +158,14 @@ public class AST {
 		final Node right;
 		TimesNode(Node l, Node r) {
             this.left = l;
-            this.right = r;}
-
+            this.right = r;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
 	/**
-	 * Nodo per la somma
+	 * Nodo per la +
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -176,8 +175,8 @@ public class AST {
 		final Node right;
 		PlusNode(Node l, Node r) {
             this.left = l;
-            this.right = r;}
-
+            this.right = r;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
@@ -188,7 +187,7 @@ public class AST {
 	 * @id id della funzione
 	 * @argumentList lista degli argomenti
 	 * @entry entry della funzione nella symbol table
-	 * @nl livello di annidamento
+	 * @nestingLevel livello di annidamento
 	 */
 	public static class CallNode extends Node {
 		final String id;
@@ -199,7 +198,6 @@ public class AST {
             this.id = i;
             this.argumentList = Collections.unmodifiableList(p);
 		}
-
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
@@ -216,28 +214,28 @@ public class AST {
 		STentry entry;
 		int nestingLevel;
 		IdNode(String i) {
-            this.id = i;}
-
+            this.id = i;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
 	/**
-	 * Nodo per il valore booleano
+	 * Nodo per il valore boolean
 	 *
 	 * @value valore booleano
 	 */
 	public static class BoolNode extends Node {
 		final Boolean value;
 		BoolNode(boolean n) {
-            this.value = n;}
-
+            this.value = n;
+		}
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
 	/**
-	 * Nodo per il valore intero
+	 * Nodo per il valore integer
 	 *
 	 * @value valore intero
 	 */
@@ -251,8 +249,9 @@ public class AST {
 	}
 
 	/**
-	 * Node per l'arrow type di una funzione
-	 * @parameters lista dei parametri
+	 * Node per arrowType di una funzione
+	 *
+	 * @parameterList lista dei parametri
 	 * @returnType tipo di ritorno
 	 */
 	public static class ArrowTypeNode extends TypeNode {
@@ -268,7 +267,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per il tipo booleano
+	 * Nodo per il tipo boolean
 	 */
 	public static class BoolTypeNode extends TypeNode {
 
@@ -277,7 +276,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per il tipo intero
+	 * Nodo per il tipo integer
 	 */
 	public static class IntTypeNode extends TypeNode {
 
@@ -287,6 +286,7 @@ public class AST {
 
 	/**
 	 * Nodo per il tipo di un metodo
+	 *
 	 * @functionalType tipo del metodo
 	 */
 	public static class MethodTypeNode extends TypeNode {
@@ -303,7 +303,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per il maggiore uguale
+	 * Nodo per il >=
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -324,7 +324,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per il minore uguale
+	 * Nodo per il <=
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -345,15 +345,15 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per NOT logico
+	 * Nodo per NOT
 	 *
 	 * @exp nodo da negare
 	 */
 	public static class NotNode extends Node {
-		final Node exp;
+		final Node expression;
 
 		NotNode(Node e) {
-			this.exp = e;
+			this.expression = e;
 		}
 
 		@Override
@@ -363,7 +363,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per la sottostrazione
+	 * Nodo per -
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -384,7 +384,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per OR logico
+	 * Nodo per OR
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -405,7 +405,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per la divisione
+	 * Nodo per /
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -426,7 +426,7 @@ public class AST {
 	}
 
 	/**
-	 * Nodo per AND logico
+	 * Nodo per AND
 	 *
 	 * @left nodo sinistro
 	 * @right nodo destro
@@ -460,7 +460,6 @@ public class AST {
 		final String classId;
 		final List<FieldNode> fieldList;
 		final List<MethodNode> methodList;
-
 		final Optional<String> superId;
 		STentry superEntry;
 
@@ -509,7 +508,7 @@ public class AST {
 	 * @returnType tipo di ritorno
 	 * @parameterList lista dei parametri
 	 * @declarationList lista delle dichiarazioni nel corpo del metodo
-	 * @exp espressione principale
+	 * @expression espressione principale
 	 * @offset offset del metodo rispetto alla classe
 	 * @label etichetta del metodo usata per la generazione del codice
 	 */
@@ -520,7 +519,6 @@ public class AST {
 		final List<DecNode> declarationList;
 		final Node expression;
 		int offset = 0;
-
 		String label;
 
 		MethodNode(String id, TypeNode rt, List<ParNode> pl, List<DecNode> dl, Node e) {
@@ -543,7 +541,7 @@ public class AST {
 	 * @objectId id dell'oggetto
 	 * @methodId id del metodo
 	 * @argumentList lista degli argomenti
-	 * @entry entry dell'oggetto nella symbol table
+	 * @symbolTableEntry entry dell'oggetto nella symbol table
 	 * @methodEntry entry del metodo nella symbol table
 	 * @nestingLevel livello di annidamento
 	 */
