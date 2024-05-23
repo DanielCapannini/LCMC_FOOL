@@ -6,6 +6,12 @@ import compiler.AST.*;
 import compiler.exc.*;
 import compiler.lib.*;
 
+/**
+ * Questa classe implementa la fase di collegamento del compilatore.
+ * Utilizza l'ASVisitor per visitare l'AST e costruire la symbol table.
+ * La symbol table viene utilizzata per collegare gli identificatori alle loro dichiarazioni.
+ * Dopo la visita, l'AST viene arricchito e viene chiamato enriched AST
+ */
 public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	/**
@@ -21,6 +27,11 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	 */
 	private final Map<String, VirtualTable> classTable = new HashMap<>();
 
+	/**
+	 * La symbolTable è usata per salvare la symbol table di ogni scope.
+	 * Il primo elemento dell'elenco è l'ambito globale.
+	 * L'ultimo elemento dell'elenco è l'ambito corrente.
+	 */
 	private final List<Map<String, STentry>> symbolTable = new ArrayList<>();
 	private int nestingLevel=0; // current nesting level
 	private int decOffset=-2; // counter for offset of local declarations at current nesting level 
@@ -28,6 +39,12 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	public SymbolTableASTVisitor() {}
 
+	/**
+	 * Effettua una ricerca nella tabella dei simboli per l'id dato.
+	 *
+	 * @param id l'id da cercare
+	 * @return voce trovato o null
+	 */
 	private STentry stLookup(String id) {
 		int j = this.nestingLevel;
 		STentry entry = null;
@@ -36,6 +53,13 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return entry;
 	}
 
+	/**
+	 * Viene creato un nuovo scope e vengono visitate le dichiarazioni.
+	 * Lo scope viene quindi rimosso.
+	 *
+	 * @param node il ProgLetInNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(ProgLetInNode node) {
 		if (this.print) this.printNode(node);
@@ -46,13 +70,26 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node il ProgNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(ProgNode node) {
 		if (this.print) this.printNode(node);
         this.visit(node.exp);
 		return null;
 	}
-	
+
+	/**
+	 * Crea un'istanza di STentry per la funzione e aggiungila alla symbol table corrente.
+	 * Crea un nuovo scope per i parametri della funzione e aggiungili alla nuova symbol table.
+	 * Successivamente, visita ogni dichiarazione e il corpo della funzione e rimuovi lo scope.
+	 *
+	 * @param node il FunNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(FunNode node) {
 		if (this.print) this.printNode(node);
@@ -71,8 +108,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
         this.symbolTable.add(newSymbolTable);
 		int prevNLDecOffset= this.decOffset; // stores counter for offset of declarations at previous nesting level
         this.decOffset =-2;
-
-
 		int parOffset=1;
 		for (ParNode par : node.parameterlist)
 			if (newSymbolTable.put(par.id, new STentry(this.nestingLevel,par.getType(),parOffset++)) != null) {
@@ -87,51 +122,71 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/**
+	 *Creare STentry per la variabile e l'aggiunge alla symbol table corrente.
+	 * Visitare l'espressione.
+	 *
+	 * @param node il VarNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(NotNode node) {
+	public Void visitNode(VarNode node) {
 		if (this.print) this.printNode(node);
         this.visit(node.expression);
-		return null;
-	}
-	
-	@Override
-	public Void visitNode(VarNode n) {
-		if (this.print) this.printNode(n);
-        this.visit(n.expression);
 		Map<String, STentry> currentSymbolTable = this.symbolTable.get(this.nestingLevel);
-		STentry entry = new STentry(this.nestingLevel,n.getType(), this.decOffset--);
+		STentry entry = new STentry(this.nestingLevel,node.getType(), this.decOffset--);
 		//inserimento di ID nella symtable
-		if (currentSymbolTable.put(n.id, entry) != null) {
-			System.out.println("Var id " + n.id + " at line "+ n.getLine() +" already declared");
+		if (currentSymbolTable.put(node.id, entry) != null) {
+			System.out.println("Var id " + node.id + " at line "+ node.getLine() +" already declared");
             this.stErrors++;
 		}
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node il PrintNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(PrintNode n) {
-		if (this.print) this.printNode(n);
-        this.visit(n.expression);
+	public Void visitNode(PrintNode node) {
+		if (this.print) this.printNode(node);
+        this.visit(node.expression);
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node IfNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(IfNode n) {
-		if (this.print) this.printNode(n);
-        this.visit(n.cond);
-        this.visit(n.thenNode);
-        this.visit(n.elseNode);
-		return null;
-	}
-	
-	@Override
-	public Void visitNode(EqualNode n) {
-		if (this.print) this.printNode(n);
-        this.visit(n.left);
-        this.visit(n.right);
+	public Void visitNode(IfNode node) {
+		if (this.print) this.printNode(node);
+        this.visit(node.cond);
+        this.visit(node.thenNode);
+        this.visit(node.elseNode);
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node EqualNode da visitare
+	 * @return null
+	 */
+	@Override
+	public Void visitNode(EqualNode node) {
+		if (this.print) this.printNode(node);
+        this.visit(node.left);
+        this.visit(node.right);
+		return null;
+	}
+
+	/**
+	 *
+	 * @param node AndNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(AndNode node) {
 		if (this.print) this.printNode(node);
@@ -140,6 +195,11 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node OrNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(OrNode node) {
 		if (this.print) this.printNode(node);
@@ -148,6 +208,23 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node il NotNode da visitare
+	 * @return null
+	 */
+	@Override
+	public Void visitNode(NotNode node) {
+		if (this.print) this.printNode(node);
+		this.visit(node.expression);
+		return null;
+	}
+
+	/**
+	 *
+	 * @param node LessEqualNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(LessEqualNode node) {
 		if (this.print) this.printNode(node);
@@ -156,6 +233,11 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node GreaterEqualNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(GreaterEqualNode node) {
 		if (this.print) this.printNode(node);
@@ -163,23 +245,38 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
         this.visit(node.right);
 		return null;
 	}
-	
+
+	/**
+	 *
+	 * @param node TimesNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(TimesNode n) {
-		if (this.print) this.printNode(n);
-        this.visit(n.left);
-        this.visit(n.right);
-		return null;
-	}
-	
-	@Override
-	public Void visitNode(PlusNode n) {
-		if (this.print) this.printNode(n);
-        this.visit(n.left);
-        this.visit(n.right);
+	public Void visitNode(TimesNode node) {
+		if (this.print) this.printNode(node);
+        this.visit(node.left);
+        this.visit(node.right);
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node PlusNode da visitare
+	 * @return null
+	 */
+	@Override
+	public Void visitNode(PlusNode node) {
+		if (this.print) this.printNode(node);
+        this.visit(node.left);
+        this.visit(node.right);
+		return null;
+	}
+
+	/**
+	 *
+	 * @param node DivNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(DivNode node) {
 		if (this.print) this.printNode(node);
@@ -188,6 +285,11 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node MinusNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(MinusNode node) {
 		if (this.print) this.printNode(node);
@@ -196,56 +298,68 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
-
+	/**
+	 * Lookup la funzione nella symbol table e setta il STentry e il nesting level
+	 * Visitare gli argomenti.
+	 *
+	 * @param node CallNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(CallNode n) {
-		if (this.print) this.printNode(n);
-		STentry entry = this.stLookup(n.id);
+	public Void visitNode(CallNode node) {
+		if (this.print) this.printNode(node);
+		STentry entry = this.stLookup(node.id);
 		if (entry == null) {
-			System.out.println("Fun id " + n.id + " at line "+ n.getLine() + " not declared");
+			System.out.println("Fun id " + node.id + " at line "+ node.getLine() + " not declared");
             this.stErrors++;
 		} else {
-			n.entry = entry;
-			n.nestingLevel = this.nestingLevel;
+			node.entry = entry;
+			node.nestingLevel = this.nestingLevel;
 		}
-		for (Node arg : n.argumentList) this.visit(arg);
+		for (Node arg : node.argumentList) this.visit(arg);
 		return null;
 	}
 
+	/**
+	 * Cercare la variabile nella tabella dei simboli e impostare il livello di ingresso e di annidamento.
+	 *
+	 * @param node IdNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(IdNode n) {
-		if (this.print) this.printNode(n);
-		STentry entry = this.stLookup(n.id);
+	public Void visitNode(IdNode node) {
+		if (this.print) this.printNode(node);
+		STentry entry = this.stLookup(node.id);
 		if (entry == null) {
-			System.out.println("Var or Par id " + n.id + " at line "+ n.getLine() + " not declared");
+			System.out.println("Var or Par id " + node.id + " at line "+ node.getLine() + " not declared");
             this.stErrors++;
 		} else {
-			n.entry = entry;
-			n.nestingLevel = this.nestingLevel;
+			node.entry = entry;
+			node.nestingLevel = this.nestingLevel;
 		}
 		return null;
 	}
 
-	@Override
-	public Void visitNode(BoolNode n) {
-		if (this.print) this.printNode(n, n.value.toString());
-		return null;
-	}
-
-	@Override
-	public Void visitNode(IntNode n) {
-		if (this.print) this.printNode(n, n.value.toString());
-		return null;
-	}
-
+	/**
+	 * Controlla se la superclass è stata dichiarata e imposta l'entry della superclass.
+	 * Crea un oggetto ClassTypeNode e imposta i campi e i metodi della superclass, se presenti.
+	 * Crea un'istanza di STentry e aggiungila alla symbol table globale.
+	 * Crea la virtual table che eredita i metodi dalla superclass, se presenti.
+	 * Aggiungi la virtual table alla tabella delle classi.
+	 * Aggiungi la nuova symbol table per i metodi e i campi.
+	 * Per ogni campo visitato, crea l'istanza di STentry e arricchendo anche il ClassTypeNode.
+	 * Per ogni metodo, arricchisce il ClassTypeNode e visita il metodo.
+	 * Rimuove la symbol table per i metodi e i campi e ripristina il livello di annidamento
+	 *
+	 * @param node ClassNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(ClassNode node) {
 		if (this.print) this.printNode(node);
-
 		ClassTypeNode tempClassTypeNode = new ClassTypeNode();
 		final boolean isSubClass = node.superId.isPresent();
 		final String superId = isSubClass ? node.superId.get() : null;
-
 		if (isSubClass) {
 			// controlla se è dichiarata una super classe
 			if (this.classTable.containsKey(superId)) {
@@ -258,10 +372,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
                 this.stErrors++;
 			}
 		}
-
 		final ClassTypeNode classTypeNode = tempClassTypeNode;
 		node.setType(classTypeNode);
-
 		// Aggiunge l'id della classe alla tabella dello scope globale controllando i duplicati
 		final STentry entry = new STentry(0, classTypeNode, this.decOffset--);
 		final Map<String, STentry> globalScopeTable = this.symbolTable.get(0);
@@ -269,7 +381,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			System.out.println("Class id " + node.classId + " at line " + node.getLine() + " already declared");
             this.stErrors++;
 		}
-
 		// Aggiunge la tabella virtuale alla tabella delle classi
 		final Set<String> visitedClassNames = new HashSet<>();
 		final VirtualTable virtualTable = new VirtualTable();
@@ -278,7 +389,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			virtualTable.putAll(superClassVirtualTable);
 		}
         this.classTable.put(node.classId, virtualTable);
-
         this.symbolTable.add(virtualTable);
 		// Setta l'offset dei campi
         this.nestingLevel++;
@@ -287,7 +397,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			final ClassTypeNode superTypeNode = (ClassTypeNode) this.symbolTable.get(0).get(superId).type;
 			fieldOffset = -superTypeNode.fieldList.size() - 1;
 		}
-
 		// gestisce le dichiarazioni dei campi
 		for (final FieldNode field : node.fieldList) {
 			if (visitedClassNames.contains(field.id)) {
@@ -299,7 +408,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 				visitedClassNames.add(field.id);
 			}
             this.visit(field);
-
 			STentry fieldEntry = new STentry(this.nestingLevel, field.getType(), fieldOffset--);
 			final boolean isFieldOverridden = isSubClass && virtualTable.containsKey(field.id);
 			if (isFieldOverridden) {
@@ -315,12 +423,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			} else {
 				classTypeNode.fieldList.add(-fieldEntry.offset - 1, fieldEntry.type);
 			}
-
 			// aggiunge il campo alla virtual table
 			virtualTable.put(field.id, fieldEntry);
 			field.offset = fieldEntry.offset;
 		}
-
 		// setta l'offset dei metodi
 		int prevDecOffset = this.decOffset;
         this.decOffset = 0;
@@ -328,7 +434,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			final ClassTypeNode superTypeNode = (ClassTypeNode) this.symbolTable.get(0).get(superId).type;
             this.decOffset = superTypeNode.methodList.size();
 		}
-
 		for (final MethodNode method : node.methodList) {
 			if (visitedClassNames.contains(method.id)) {
 				System.out.println(
@@ -342,20 +447,33 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			final MethodTypeNode methodTypeNode = (MethodTypeNode) this.symbolTable.get(this.nestingLevel).get(method.id).type;
 			classTypeNode.methodList.add(method.offset, methodTypeNode);
 		}
-
 		// Rimuove la classe dalla symbol table
         this.symbolTable.remove(this.nestingLevel--);
         this.decOffset = prevDecOffset;
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node ClassTypeNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(final FieldNode node) {
+	public Void visitNode(final ClassTypeNode node) {
 		if (this.print) this.printNode(node);
 		return null;
 	}
 
-
+	/**
+	 * Crea il MethodTypeNode e la STentry che lo aggiunge alla symbol table
+	 * Se il metodo è sovrascritto a un altro metodo, verificare se la sovrascrittura è corretta.
+	 * Creare la nuova SymbolTable per lo scope del metodo.
+	 * Per ogni parametro, creare la STentry e aggiungerla alla symbol table
+	 * Visitare le dichiarazioni e l'espressione.
+	 * Infine, rimuovere lo scope del metodo dalla symbol table
+	 * @param node MethodNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(final MethodNode node) {
 		if (this.print) this.printNode(node);
@@ -410,14 +528,30 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
-
-
+	/**
+	 *
+	 * @param node MethodTypeNode da visitare
+	 * @return null
+	 */
 	@Override
-	public Void visitNode(final EmptyNode node) {
+	public Void visitNode(final MethodTypeNode node) {
 		if (this.print) this.printNode(node);
 		return null;
 	}
 
+	/**
+	 * Controlla se l'id dell'oggetto è stato dichiarato, facendo lookup nella symbol table.
+	 * Se l'id dell'oggetto non è stato dichiarato, stampa errore.
+	 * Se l'id dell'oggetto è stato dichiarato, verifica se il tipo è un RefTypeNode.
+	 * Se il tipo non è un RefTypeNode, stampa errore.
+	 * Se il tipo è un RefTypeNode, verifica se l'id del metodo è nella virtual table.
+	 * Se l'id del metodo non è nella tabella virtuale, stampa errore.
+	 * Se l'id del metodo è nella virtual table, setta STentry e il nesting level del nodo.
+	 * Finalmente, visita gli argomenti.
+	 *
+	 * @param node ClassCallNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(final ClassCallNode node) {
 		if (this.print) this.printNode(node);
@@ -440,11 +574,28 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			System.out.println("Object id " + node.objectId + " at line " + node.getLine() + " is not a RefType");
             this.stErrors++;
 		}
-
 		for(Node argument : node.argumentList) this.visit(argument);
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node FieldNode da visitare
+	 * @return null
+	 */
+	@Override
+	public Void visitNode(final FieldNode node) {
+		if (this.print) this.printNode(node);
+		return null;
+	}
+
+	/**
+	 * Verifica se l'id della classe è stato dichiarato, facendo lookup nella virtual table delle classi
+	 * restituisce errore se l'ID non è dichiarato
+	 *
+	 * @param node NewNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(final NewNode node) {
 		if (this.print) this.printNode(node);
@@ -452,25 +603,18 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			System.out.println("Class id " + node.classId + " was not declared");
             this.stErrors++;
 		}
-
-
 		node.classSymbolTableEntry = this.symbolTable.get(0).get(node.classId);
 		for (Node argument : node.argumentList) this.visit(argument);
 		return null;
 	}
 
-	@Override
-	public Void visitNode(final ClassTypeNode node) {
-		if (this.print) this.printNode(node);
-		return null;
-	}
-
-	@Override
-	public Void visitNode(final MethodTypeNode node) {
-		if (this.print) this.printNode(node);
-		return null;
-	}
-
+	/**
+	 * erifica se il tipo è stato dichiarato, facendo lookup nella virtual table delle classi.
+	 * se non è stato dichiarato stampa un errore
+	 *
+	 * @param node RefTypeNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(final RefTypeNode node) {
 		if (this.print) this.printNode(node);
@@ -481,6 +625,44 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node BoolNode da visitare
+	 * @return null
+	 */
+	@Override
+	public Void visitNode(BoolNode node) {
+		if (this.print) this.printNode(node, node.value.toString());
+		return null;
+	}
+
+	/**
+	 *
+	 * @param node IntNode da visitare
+	 * @return null
+	 */
+	@Override
+	public Void visitNode(IntNode node) {
+		if (this.print) this.printNode(node, node.value.toString());
+		return null;
+	}
+
+	/**
+	 *
+	 * @param node EmptyNode da visitare
+	 * @return null
+	 */
+	@Override
+	public Void visitNode(final EmptyNode node) {
+		if (this.print) this.printNode(node);
+		return null;
+	}
+
+	/**
+	 *
+	 * @param node EmptyTypeNode da visitare
+	 * @return null
+	 */
 	@Override
 	public Void visitNode(EmptyTypeNode node) {
 		if (this.print) this.printNode(node);
