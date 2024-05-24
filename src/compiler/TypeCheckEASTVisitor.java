@@ -26,7 +26,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	}
 
 	// Method to handle visit of declaration list with exception management
-	private void visitNodeList(List<DecNode> nodeList) throws TypeException {
+	private void visitNodeList(List<DecNode> nodeList) {
 		for (Node dec : nodeList) {
 			try {
 				this.visit(dec);
@@ -37,7 +37,13 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 			}
 		}
 	}
-	
+
+	/**
+	 *
+	 * @param node ProgLetInNode
+	 * @return nodo analizzato
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(ProgLetInNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -45,12 +51,24 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return this.visit(node.exp);
 	}
 
+	/**
+	 *
+	 * @param node ProgNode
+	 * @return nodo analizzato
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(ProgNode node) throws TypeException {
 		if (this.print) this.printNode(node);
-		return this.visit(node.exp);
+		return this.visit(node.expression);
 	}
 
+	/**
+	 *
+	 * @param node
+	 * @return null
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(FunNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
@@ -60,6 +78,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node VarNode
+	 * @return null
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(VarNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
@@ -68,12 +92,24 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node PrintNode
+	 * @return nodo analizzato
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(PrintNode node) throws TypeException {
 		if (this.print) this.printNode(node);
 		return this.visit(node.expression);
 	}
 
+	/**
+	 *
+	 * @param node IfNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(IfNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -89,6 +125,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return returnType;
 	}
 
+	/**
+	 *
+	 * @param node EqualNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(EqualNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -99,6 +141,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new BoolTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node TimesNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(TimesNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -108,6 +156,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new IntTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node PlusNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(PlusNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -117,6 +171,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new IntTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node CallNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(CallNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
@@ -131,6 +191,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return arrowTypeNode.returnType;
 	}
 
+	/**
+	 *
+	 * @param node IdNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(IdNode node) throws TypeException {
 		if (this.print) this.printNode(node,node.id);
@@ -140,20 +206,34 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return t;
 	}
 
+	/**
+	 *
+	 * @param node BoolNode
+	 * @return
+	 */
 	@Override
 	public TypeNode visitNode(BoolNode node) {
 		if (this.print) this.printNode(node,node.value.toString());
 		return new BoolTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node IntNode
+	 * @return
+	 */
 	@Override
 	public TypeNode visitNode(IntNode node) {
 		if (this.print) this.printNode(node,node.value.toString());
 		return new IntTypeNode();
 	}
 
-// gestione tipi incompleti	(se lo sono lancia eccezione)
-	
+	/**
+	 *
+	 * @param node ArrowTypeNode
+	 * @return null
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(ArrowTypeNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -162,26 +242,46 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node BoolTypeNode
+	 * @return null
+	 */
 	@Override
 	public TypeNode visitNode(BoolTypeNode node) {
 		if (this.print) this.printNode(node);
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node IntTypeNode
+	 * @return null
+	 */
 	@Override
 	public TypeNode visitNode(IntTypeNode node) {
 		if (this.print) this.printNode(node);
 		return null;
 	}
 
-// STentry (ritorna campo type)
-
+	/**
+	 *
+	 * @param entry STentry
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitSTentry(STentry entry) throws TypeException {
 		if (this.print) this.printSTentry("type");
 		return this.ckvisit(entry.type);
 	}
 
+	/**
+	 *
+	 * @param node MinusNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(MinusNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -191,6 +291,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new IntTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node DivNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(DivNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -200,6 +306,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new IntTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node GreaterEqualNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(GreaterEqualNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -209,6 +321,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new BoolTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node LessEqualNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(LessEqualNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -218,6 +336,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new BoolTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node OrNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(OrNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -227,6 +351,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new BoolTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node AndNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(AndNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -236,6 +366,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new BoolTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node NotNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(NotNode node) throws TypeException {
 		if (this.print) this.printNode(node);
@@ -244,6 +380,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new BoolTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node ClassNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(ClassNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.classId);
@@ -287,6 +429,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node MethodNode
+	 * @return null
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(final MethodNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.id);
@@ -298,12 +446,23 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node EmptyNode
+	 * @return new EmptyTypeNode
+	 */
 	@Override
 	public TypeNode visitNode(final EmptyNode node) {
 		if (this.print) this.printNode(node);
 		return new EmptyTypeNode();
 	}
 
+	/**
+	 *
+	 * @param node ClassCallNode
+	 * @return
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(final ClassCallNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.objectId);
@@ -331,6 +490,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return arrowTypeNode.returnType;
 	}
 
+	/**
+	 *
+	 * @param node NewNode
+	 * @return nodo con il riferimento alla classe
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(final NewNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.classId);
@@ -341,7 +506,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if (classTypeNode.fieldList.size() != node.argumentList.size()) {
 			throw new TypeException("Wrong number of parameters in the invocation of constructor " + node.classId, node.getLine());
 		}
-		// check if the types of the parameters are correct
 		for (int i = 0; i < node.argumentList.size(); i++) {
 			if (!(isSubtype(this.visit(node.argumentList.get(i)), classTypeNode.fieldList.get(i)))) {
 				throw new TypeException("Wrong type for " + (i + 1) + "-th parameter in the invocation of constructor " + node.classId, node.getLine());
@@ -350,32 +514,50 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		return new RefTypeNode(node.classId);
 	}
 
-	// OO Type Nodes
-
+	/**
+	 *
+	 * @param node ClassTypeNode
+	 * @return null
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(final ClassTypeNode node) throws TypeException {
 		if (this.print) this.printNode(node);
-		// Visit all fields and methods
 		for (final TypeNode field : node.fieldList) this.visit(field);
 		for (final MethodTypeNode method : node.methodList) this.visit(method);
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node MethodTypeNode
+	 * @return null
+	 * @throws TypeException l'espressione non è corretta
+	 */
 	@Override
 	public TypeNode visitNode(final MethodTypeNode node) throws TypeException {
 		if (this.print) this.printNode(node);
-		// Visit all parameters and the return type
 		for (final TypeNode parameter : node.functionalType.parameterList) this.visit(parameter);
 		this.visit(node.functionalType.returnType, "->");
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node RefTypeNode
+	 * @return null
+	 */
 	@Override
 	public TypeNode visitNode(final RefTypeNode node) {
 		if (this.print) this.printNode(node);
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node EmptyTypeNode
+	 * @return null
+	 */
 	@Override
 	public TypeNode visitNode(final EmptyTypeNode node) {
 		if (this.print) this.printNode(node);
