@@ -267,6 +267,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 * Prende l'input del codice associabile alla Symbol Table e lo manda al metodo checkVisit
 	 * per controllare che sia visitabile
+	 *
 	 * @param entry STentry
 	 * @return il risultato della visita
 	 * @throws TypeException l'espressione non è corretta
@@ -405,9 +406,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		superType.put(node.classId, parent); // eredito, quindi aggiungo la mia classe in superType
 		final ClassTypeNode classType = (ClassTypeNode) node.getType();
 		final ClassTypeNode superClassType = (ClassTypeNode) node.superClassEntry.type;
-		//CAMPI: controllo che gli overriding siano corretti.
-		//Per ogni campo calcolo la posizione che, in fieldList di superClassType,
-		//corrisponde al suo offset. Se la pos è < allora ovveriding e faccio il check sottotipo
 		for (final FieldNode field : node.fieldList) {
 			int position = -field.offset - 1;
 			final boolean isOverriding = position < superClassType.fieldList.size();
@@ -415,9 +413,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 				throw new TypeException("Wrong type for field " + field.id, field.getLine());
 			}
 		}
-		//METODI: controllo che gli overriding siano corretti
-		//Per ogni metodo calcolo la posizione che, in methodList di superClassType,
-		//corrisponde al suo offset. Se la pos è < allora ovveriding e faccio il check sottotipo
 		for (final MethodNode method : node.methodList) {
 			int position = method.offset;
 			final boolean isOverriding = position < superClassType.fieldList.size();
@@ -438,6 +433,10 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(final MethodNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.id);
         this.visitNodeList(node.declarationList);
+		ArrowTypeNode arrowTypeNode = (ArrowTypeNode) node.getType();
+		 if (arrowTypeNode.parameterList.size() == node.parameterList.size())  {
+			 throw new TypeException("wrong number of parameters " + node.id, node.getLine());
+		 }
 		if (!isSubtype(this.visit(node.expression), this.ckvisit(node.returnType))) { // visita l'espressione e controlla se è un sottotipo del tipo restituito
 			throw new TypeException("Wrong return type for method " + node.id, node.getLine());
 		}
