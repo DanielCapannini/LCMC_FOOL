@@ -358,15 +358,15 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	public Void visitNode(ClassNode node) {
 		if (this.print) this.printNode(node);
 		ClassTypeNode tempClassTypeNode = new ClassTypeNode();
-		final boolean isSubClass = node.superId.isPresent();
-		final String superId = isSubClass ? node.superId.get() : null;
+		final boolean isSubClass = node.superClassId.isPresent();
+		final String superId = isSubClass ? node.superClassId.get() : null;
 		if (isSubClass) {
 			// controlla se è dichiarata una super classe
 			if (this.classTable.containsKey(superId)) {
 				final STentry superSTEntry = this.symbolTable.get(0).get(superId);
 				final ClassTypeNode superTypeNode = (ClassTypeNode) superSTEntry.type;
 				tempClassTypeNode = new ClassTypeNode(superTypeNode);
-				node.superEntry = superSTEntry;
+				node.superClassEntry = superSTEntry;
 			} else {
 				System.out.println("Class " + superId + " at line " + node.getLine() + " not declared");
                 this.stErrors++;
