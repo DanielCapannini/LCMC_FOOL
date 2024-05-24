@@ -461,12 +461,12 @@ public class AST {
 		final String classId;
 		final List<FieldNode> fieldList;
 		final List<MethodNode> methodList;
-		final Optional<String> superId;
-		STentry superEntry;
+		final Optional<String> superClassId;
+		STentry superClassEntry;
 
 		ClassNode(String classId, final Optional<String> superId, List<FieldNode> fields, List<MethodNode> methods) {
 			this.classId = classId;
-			this.superId = superId;
+			this.superClassId = superId;
 			this.fieldList = Collections.unmodifiableList(fields);
 			this.methodList = Collections.unmodifiableList(methods);
 		}
