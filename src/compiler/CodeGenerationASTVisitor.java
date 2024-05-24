@@ -58,7 +58,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     public String visitNode(ProgNode node) {
         if (this.print) this.printNode(node);
         return nlJoin(
-                this.visit(node.exp),
+                this.visit(node.expression),
                 HALT
         );
     }
