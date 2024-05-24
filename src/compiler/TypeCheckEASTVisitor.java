@@ -65,7 +65,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 
 	/**
 	 *
-	 * @param node
+	 * @param node FunNode
 	 * @return null
 	 * @throws TypeException l'espressione non è corretta
 	 */
@@ -107,7 +107,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node IfNode
-	 * @return
+	 * @return una visita al nodo dell'espressione
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -128,7 +128,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node EqualNode
-	 * @return
+	 * @return new BoolTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -144,7 +144,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node TimesNode
-	 * @return
+	 * @return new IntTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -159,7 +159,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node PlusNode
-	 * @return
+	 * @return new IntTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -174,7 +174,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node CallNode
-	 * @return
+	 * @return ArrowType
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -194,7 +194,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node IdNode
-	 * @return
+	 * @return TypeNode che identifica il tipo del nodo
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -209,7 +209,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node BoolNode
-	 * @return
+	 * @return new BoolTypeNode
 	 */
 	@Override
 	public TypeNode visitNode(BoolNode node) {
@@ -220,7 +220,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node IntNode
-	 * @return
+	 * @return new IntTypeNode
 	 */
 	@Override
 	public TypeNode visitNode(IntNode node) {
@@ -265,9 +265,10 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	}
 
 	/**
-	 *
+	 * Prende l'input del codice associabile alla Symbol Table e lo manda al metodo checkVisit
+	 * per controllare che sia visitabile
 	 * @param entry STentry
-	 * @return
+	 * @return il risultato della visita
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -279,7 +280,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node MinusNode
-	 * @return
+	 * @return new IntTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -294,7 +295,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node DivNode
-	 * @return
+	 * @return new IntTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -309,7 +310,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node GreaterEqualNode
-	 * @return
+	 * @return new BoolTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -324,7 +325,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node LessEqualNode
-	 * @return
+	 * @return new BoolTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -339,7 +340,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node OrNode
-	 * @return
+	 * @return new BoolTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -354,7 +355,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node AndNode
-	 * @return
+	 * @return new BoolTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -369,7 +370,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node NotNode
-	 * @return
+	 * @return new BoolTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
@@ -383,14 +384,14 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node ClassNode
-	 * @return
+	 * @return null
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
 	public TypeNode visitNode(ClassNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.classId);
-		final boolean isSubClass = node.superId.isPresent();
-		final String parent = isSubClass ? node.superId.get() : null;
+		final boolean isSubClass = node.superClassId.isPresent();
+		final String parent = isSubClass ? node.superClassId.get() : null;
 		if (!isSubClass) {
 			for(Node method : node.methodList) {
 				try {
@@ -401,13 +402,11 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 			}
 			return null;
 		}
-		// eredito, quindi aggiungo la mia classe in superType
-		superType.put(node.classId, parent);
+		superType.put(node.classId, parent); // eredito, quindi aggiungo la mia classe in superType
 		final ClassTypeNode classType = (ClassTypeNode) node.getType();
-		//Otimizzazione 2
-		final ClassTypeNode superClassType = (ClassTypeNode) node.superEntry.type;
+		final ClassTypeNode superClassType = (ClassTypeNode) node.superClassEntry.type;
 		//CAMPI: controllo che gli overriding siano corretti.
-		//Per ogni campo calcolo la posizione che, in fields di superClassType,
+		//Per ogni campo calcolo la posizione che, in fieldList di superClassType,
 		//corrisponde al suo offset. Se la pos è < allora ovveriding e faccio il check sottotipo
 		for (final FieldNode field : node.fieldList) {
 			int position = -field.offset - 1;
@@ -417,7 +416,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 			}
 		}
 		//METODI: controllo che gli overriding siano corretti
-		//Per ogni metodo calcolo la posizione che, in methods di superClassType,
+		//Per ogni metodo calcolo la posizione che, in methodList di superClassType,
 		//corrisponde al suo offset. Se la pos è < allora ovveriding e faccio il check sottotipo
 		for (final MethodNode method : node.methodList) {
 			int position = method.offset;
@@ -439,8 +438,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(final MethodNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.id);
         this.visitNodeList(node.declarationList);
-		// visit expression and check if it is a subtype of the return type
-		if (!isSubtype(this.visit(node.expression), this.ckvisit(node.returnType))) {
+		if (!isSubtype(this.visit(node.expression), this.ckvisit(node.returnType))) { // visita l'espressione e controlla se è un sottotipo del tipo restituito
 			throw new TypeException("Wrong return type for method " + node.id, node.getLine());
 		}
 		return null;
@@ -460,31 +458,26 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	/**
 	 *
 	 * @param node ClassCallNode
-	 * @return
+	 * @return arrowTypeNode.returnType
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
 	public TypeNode visitNode(final ClassCallNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.objectId);
-		// return anticipato per evitare NullPointerException su ClassCallNode errato
-		if(Objects.isNull(node.methodEntry)) return null;
-		TypeNode type = this.visit(node.methodEntry);
-		// visit method, if it is a method type, get the functional type
-		if (type instanceof MethodTypeNode methodTypeNode) {
-			type = methodTypeNode.functionalType;
+		if(Objects.isNull(node.methodEntry)) return null; // per evitare NullPointerException
+		TypeNode methodType = this.visit(node.methodEntry);
+		if (!(methodType instanceof MethodTypeNode)) {
+			throw new TypeException("Invocation of a non-method " + node.methodId, node.getLine());
 		}
-		// if it is not an arrow type, throw an exception
-		if (!(type instanceof ArrowTypeNode arrowTypeNode)) {
-			throw new TypeException("Invocation of a non-function " + node.methodId, node.getLine());
+		ArrowTypeNode arrowTypeNode = ((MethodTypeNode) methodType).functionalType;
+		if (node.argumentList.size() != arrowTypeNode.parameterList.size()) {
+			throw new TypeException("Wrong number of parameters in the invocation of " + node.methodId, node.getLine());
 		}
-		// check if the number of parameters is correct
-		if (arrowTypeNode.parameterList.size() != node.argumentList.size()) {
-			throw new TypeException("Wrong number of parameters in the invocation of method " + node.methodId, node.getLine());
-		}
-		// check if the types of the parameters are correct
-		for (int i = 0; i < node.argumentList.size(); i++) {
-			if (!(isSubtype(this.visit(node.argumentList.get(i)), arrowTypeNode.parameterList.get(i)))) {
-				throw new TypeException("Wrong type for " + (i + 1) + "-th parameter in the invocation of method " + node.methodId, node.getLine());
+		for (var i = 0; i < node.argumentList.size(); i++) {
+			if (!isSubtype(this.visit(node.argumentList.get(i)), arrowTypeNode.parameterList.get(i))) {
+				throw new TypeException(
+						"Wrong type for " + (i+1) + "-th parameter in the invocation of " + node.methodId, node.getLine()
+				);
 			}
 		}
 		return arrowTypeNode.returnType;
