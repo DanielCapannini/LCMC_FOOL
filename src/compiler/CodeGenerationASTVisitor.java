@@ -331,9 +331,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		if (this.print) this.printNode(node, node.classId);
 		final List<String> dispatchTable = new ArrayList<>();
         this.dispatchTables.add(dispatchTable);
-		final boolean isSubclass = node.superEntry != null;
+		final boolean isSubclass = node.superClassEntry != null;
 		if (isSubclass) {
-			final List<String> superDispatchTable = this.dispatchTables.get(-node.superEntry.offset - 2);
+			final List<String> superDispatchTable = this.dispatchTables.get(-node.superClassEntry.offset - 2);
 			dispatchTable.addAll(superDispatchTable);
 		}
 		for (final MethodNode methodEntry : node.methodList) {
