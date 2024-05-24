@@ -29,9 +29,10 @@ public class AST {
 	 * @exp espressione principale
 	 */
 	public static class ProgNode extends Node {
-		final Node exp;
+		final Node expression;
 		ProgNode(Node e) {
-            this.exp = e;}
+            this.expression = e;
+		}
 
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
