@@ -203,7 +203,7 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(ClassNode node) {
-        this.printNode(node, node.classId + " extends " + node.superId.orElse("nothing"));
+        this.printNode(node, node.classId + " extends " + node.superClassId.orElse("nothing"));
 		for (Node field : node.fieldList) this.visit(field);
 		for (Node method : node.methodList) this.visit(method);
 		return null;
