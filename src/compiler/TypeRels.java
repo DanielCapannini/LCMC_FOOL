@@ -45,10 +45,12 @@ public class TypeRels {
 				return false;
 			}
 		}
-        return firstArrowTypeNode.parameterList.size() == secondArrowTypeNode.parameterList.size();
+		return true;
     }
 
 	public static boolean isSubtype(TypeNode first, TypeNode second) {
+
+
 		return isBoolAndInt(first, second)
 				|| isEmptyTypeAndRefType(first, second)
 				|| isSubclass(first, second)
