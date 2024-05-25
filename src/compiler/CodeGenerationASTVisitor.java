@@ -40,29 +40,48 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     public CodeGenerationASTVisitor() {
     }
 
+	/*
+	 * i metodi seguenti sono i visitatori che attraversano l'Abstract Syntax Tree generato dal parser
+	 */
+
+	/**
+	 *
+	 * @param node ProgLetInNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(ProgLetInNode node) {
         if (this.print) this.printNode(node);
         String declarationCode = null;
         for (Node dec : node.declarationlist) declarationCode = nlJoin(declarationCode, this.visit(dec));
         return nlJoin(
-                PUSH + 0,
-                declarationCode, // generate code for declarations (allocation)
-                this.visit(node.exp),
-                HALT,
-                getCode()
+                PUSH + 0,      //push un valore fittizio sullo stack
+                declarationCode,      //genera il codice per la dichiarazione e lo alloca
+                this.visit(node.exp), //genera il codice per l'espressione
+                HALT,                 //istruzione halt
+                getCode()             //recupera il codice generato per le funzioni
         );
     }
 
+	/**
+	 *
+	 * @param node ProgNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(ProgNode node) {
         if (this.print) this.printNode(node);
         return nlJoin(
                 this.visit(node.expression),
-                HALT
+                HALT   //interrompe l'esecuzione del programma
         );
     }
 
+	/**
+	 *
+	 * @param node FunNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(FunNode node) {
 		if (this.print) this.printNode(node, node.id);
@@ -78,30 +97,40 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         putCode(
                 nlJoin(
                         functionLabel + ":",
-                        COPY_FP, // set $fp to $sp value
-                        LOAD_RA, // load $ra value
-                        declarationListCode, // generate code for local declarations (they use the new $fp!!!)
+                        COPY_FP,                     // imposta il frame-pointer sul valore dello stack-pointer
+                        LOAD_RA,                     // carica il return address
+                        declarationListCode,         // generate code for local declarations (they use the new $fp!!!)
                         this.visit(node.expression), // generate code for function body expression
-                        STORE_TM, // set $tm to popped value (function result)
-                        popDeclarationsList, // remove local declarations from stack
-                        STORE_RA, // set $ra to popped value
-                        POP, // remove Access Link from stack
-                        popParametersList, // remove parameters from stack
-                        STORE_FP, // set $fp to popped value (Control Link)
-                        LOAD_FP, // load $tm value (function result)
-                        LOAD_RA, // load $ra value
-                        JUMP_SUBROUTINE  // jump to to popped address
+                        STORE_TM,                    // set $tm to popped value (function result)
+                        popDeclarationsList,         // remove local declarations from stack
+                        STORE_RA,                    // set $ra to popped value
+                        POP,                         // remove Access Link from stack
+                        popParametersList,           // remove parameters from stack
+                        STORE_FP,                    // set $fp to popped value (Control Link)
+                        LOAD_FP,                     // load $tm value (function result)
+                        LOAD_RA,                     // load $ra value
+                        JUMP_SUBROUTINE              // jump to to popped address
                 )
         );
         return PUSH + functionLabel;
     }
 
+	/**
+	 *
+	 * @param node VarNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(VarNode node) {
         if (this.print) this.printNode(node, node.id);
         return this.visit(node.expression);
     }
 
+	/**
+	 *
+	 * @param node PrintNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(PrintNode node) {
         if (this.print) this.printNode(node);
@@ -111,6 +140,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         );
     }
 
+	/**
+	 *
+	 * @param node IfNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(IfNode node) {
         if (this.print) this.printNode(node);
@@ -128,6 +162,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         );
     }
 
+	/**
+	 *
+	 * @param node EqualNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(EqualNode node) {
         if (this.print) this.printNode(node);
@@ -145,6 +184,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         );
     }
 
+	/**
+	 *
+	 * @param node TimesNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(TimesNode node) {
         if (this.print) this.printNode(node);
@@ -155,6 +199,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         );
     }
 
+	/**
+	 *
+	 * @param node PlusNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(PlusNode node) {
         if (this.print) this.printNode(node);
@@ -165,6 +214,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         );
     }
 
+	/**
+	 *
+	 * @param node CallNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(CallNode node) {
         if (this.print) this.printNode(node, node.id);
@@ -189,6 +243,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
     }
 
+	/**
+	 *
+	 * @param node IdNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(IdNode node) {
         if (this.print) this.printNode(node, node.id);
@@ -203,18 +262,33 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         );
     }
 
+	/**
+	 *
+	 * @param node BoolNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(BoolNode node) {
         if (this.print) this.printNode(node, node.value.toString());
         return PUSH + (node.value ? 1 : 0);
     }
 
+	/**
+	 *
+	 * @param node IntNode
+	 * @return codice generato
+	 */
     @Override
     public String visitNode(IntNode node) {
         if (this.print) this.printNode(node, node.value.toString());
         return PUSH + node.value;
     }
 
+	/**
+	 *
+	 * @param node MinusNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(MinusNode node) {
 		if (this.print) this.printNode(node);
@@ -225,6 +299,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node DivNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(DivNode node) {
 		if (this.print) this.printNode(node);
@@ -235,6 +314,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node LessEqualNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(LessEqualNode node) {
 		if (this.print) this.printNode(node);
@@ -252,6 +336,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node GreaterEqualNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(GreaterEqualNode node) {
 		if (this.print) this.printNode(node);
@@ -269,6 +358,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node OrNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(OrNode node) {
 		if (this.print) this.printNode(node);
@@ -289,6 +383,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node AndNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(AndNode node) {
 		if (this.print) this.printNode(node);
@@ -309,6 +408,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node NotNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(NotNode node) {
 		if (this.print) this.printNode(node);
@@ -326,6 +430,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node ClassNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(ClassNode node) {
 		if (this.print) this.printNode(node, node.classId);
@@ -363,6 +472,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node MethodNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(MethodNode node) {
 		if (this.print) this.printNode(node);
@@ -397,6 +511,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		return null;
 	}
 
+	/**
+	 *
+	 * @param node NewNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(NewNode node) {
 		if (this.print) this.printNode(node, node.classId);
@@ -431,12 +550,22 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		);
 	}
 
+	/**
+	 *
+	 * @param node EmptyNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(EmptyNode node) {
 		if (this.print) this.printNode(node);
 		return PUSH + -1;
 	}
 
+	/**
+	 *
+	 * @param node ClassCallNode
+	 * @return codice generato
+	 */
 	@Override
 	public String visitNode(ClassCallNode node) {
 		if (this.print) this.printNode(node, node.objectId);
