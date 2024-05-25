@@ -11,25 +11,13 @@ import java.util.stream.Stream;
 public class TypeRels {
 	public static Map<String, String> superType = new HashMap<>();
 
-	private static boolean isEmptyTypeAndRefType(final TypeNode first, final TypeNode second) {
-		return ((first instanceof EmptyTypeNode) && (second instanceof RefTypeNode));
-	}
-
-	private static boolean isBoolAndInt(final TypeNode first, final TypeNode second) {
-		return ((first instanceof BoolTypeNode) && (second instanceof IntTypeNode | second instanceof BoolTypeNode))
-				|| ((first instanceof IntTypeNode) && (second instanceof IntTypeNode));
-	}
-
+	/**
+	 *
+	 * @param type tipo
+	 * @return stream dei sopratipi del tipo di input
+	 */
 	private static Stream<String> superTypes(final String type) {
 		return Stream.iterate(type, Objects::nonNull, superType::get);
-	}
-
-	private static boolean isSubclass(final TypeNode first, final TypeNode second) {
-		if (!(first instanceof RefTypeNode firstRefTypeNode)
-				|| !(second instanceof RefTypeNode secondRefTypeNode)) {
-			return false;
-		}
-		return superTypes(firstRefTypeNode.typeId).anyMatch(secondRefTypeNode.typeId::equals);
 	}
 
 	private static boolean isMethodOverride(final TypeNode first, final TypeNode second) {
@@ -48,15 +36,34 @@ public class TypeRels {
 		return true;
     }
 
+	/**
+	 *
+	 * @param first TypeNode su cui controllare
+	 * @param second TypeNode di confronto
+	 * @return true se in primo TypeNode è dello stesso tipi o sottotipo
+	 */
 	public static boolean isSubtype(TypeNode first, TypeNode second) {
+		//controllo sui tipi Int e Boolean
+		if(((first instanceof BoolTypeNode) && (second instanceof IntTypeNode | second instanceof BoolTypeNode))
+				|| ((first instanceof IntTypeNode) && (second instanceof IntTypeNode))) return true;
+		//controllo che il primo sia di tipo Empty e il secondo riferimento
+		if(((first instanceof EmptyTypeNode) && (second instanceof RefTypeNode))) return true;
+		//controllo che il metodo di una classe sia ereditato da un metodo della classe padre
+		if(isMethodOverride(first, second)) return true;
+		//controllo che il primo sia sottoclasse del secondo
+		if (!(first instanceof RefTypeNode firstRefTypeNode)
+				|| !(second instanceof RefTypeNode secondRefTypeNode)) {
+			return false;
+		}
+        return superTypes(firstRefTypeNode.typeId).anyMatch(secondRefTypeNode.typeId::equals);
+    }
 
-
-		return isBoolAndInt(first, second)
-				|| isEmptyTypeAndRefType(first, second)
-				|| isSubclass(first, second)
-				|| isMethodOverride(first, second);
-	}
-
+	/**
+	 *
+	 * @param first TypeNode
+	 * @param second TypeNode
+	 * @return supertipo in comune se presente o null
+	 */
 	public static TypeNode lowestCommonAncestor(final TypeNode first, final TypeNode second) {
 		if (isSubtype(first, second)) return second;
 		if (isSubtype(second, first)) return first;
