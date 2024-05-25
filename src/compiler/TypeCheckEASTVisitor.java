@@ -433,10 +433,10 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(final MethodNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.id);
         this.visitNodeList(node.declarationList);
-		ArrowTypeNode arrowTypeNode = (ArrowTypeNode) node.getType();
-		 if (arrowTypeNode.parameterList.size() == node.parameterList.size())  {
-			 throw new TypeException("wrong number of parameters " + node.id, node.getLine());
-		 }
+		//ArrowTypeNode arrowTypeNode = (ArrowTypeNode) node.getType();
+		// if (arrowTypeNode.parameterList.size() == node.parameterList.size())  {
+		//	 throw new TypeException("wrong number of parameters " + node.id, node.getLine());
+		// }
 		if (!isSubtype(this.visit(node.expression), this.ckvisit(node.returnType))) { // visita l'espressione e controlla se è un sottotipo del tipo restituito
 			throw new TypeException("Wrong return type for method " + node.id, node.getLine());
 		}
