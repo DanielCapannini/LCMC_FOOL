@@ -20,6 +20,7 @@ public class TypeRels {
 		return Stream.iterate(type, Objects::nonNull, superType::get);
 	}
 
+
 	private static boolean isMethodOverride(final TypeNode first, final TypeNode second) {
 		if (!(first instanceof ArrowTypeNode firstArrowTypeNode) ||
 				!(second instanceof ArrowTypeNode secondArrowTypeNode)) {
