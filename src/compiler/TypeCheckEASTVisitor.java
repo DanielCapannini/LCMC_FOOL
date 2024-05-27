@@ -416,6 +416,13 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		for (final MethodNode method : node.methodList) {
 			int position = method.offset;
 			final boolean isOverriding = position < superClassType.fieldList.size();
+			if (isOverriding) {
+				ArrowTypeNode methodTypeNode = classType.methodList.get(position).functionalType;
+				ArrowTypeNode superMethodNode = superClassType.methodList.get(position).functionalType;
+				if (methodTypeNode.parameterList.size() != superMethodNode.parameterList.size()) {
+					throw new TypeException("WRONG quantity parameters " + method.id, method.getLine());
+               }
+			}
 			if (isOverriding && !isSubtype(classType.methodList.get(position), superClassType.methodList.get(position))) {
 				throw new TypeException("Wrong type for method " + method.id, method.getLine());
 			}
@@ -433,10 +440,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(final MethodNode node) throws TypeException {
 		if (this.print) this.printNode(node, node.id);
         this.visitNodeList(node.declarationList);
-		//ArrowTypeNode arrowTypeNode = (ArrowTypeNode) node.getType();
-		// if (arrowTypeNode.parameterList.size() == node.parameterList.size())  {
-		//	 throw new TypeException("wrong number of parameters " + node.id, node.getLine());
-		// }
 		if (!isSubtype(this.visit(node.expression), this.ckvisit(node.returnType))) { // visita l'espressione e controlla se è un sottotipo del tipo restituito
 			throw new TypeException("Wrong return type for method " + node.id, node.getLine());
 		}
