@@ -35,6 +35,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	private static final String LOAD_HEAP_POINTER = "lhp";
 	private static final String STORE_WORD = "sw";
 	private static final String STORE_HP = "shp";
+
 	private final List<List<String>> dispatchTables = new ArrayList<>();
 
     public CodeGenerationASTVisitor() {
