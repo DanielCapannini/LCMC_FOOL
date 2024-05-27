@@ -405,6 +405,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		}
 		superType.put(node.classId, parent); // eredito, quindi aggiungo la mia classe in superType
 		final ClassTypeNode classType = (ClassTypeNode) node.getType();
+		//ottimizzazione 2
 		final ClassTypeNode superClassType = (ClassTypeNode) node.superClassEntry.type;
 		for (final FieldNode field : node.fieldList) {
 			int position = -field.offset - 1;
