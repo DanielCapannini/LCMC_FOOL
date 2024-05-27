@@ -29,7 +29,6 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	/**
 	 * Memorizza il valore in TM (Temporary Memory).
 	 * TM è utilizzato per memorizzare temporaneamente valori durante l'esecuzione
-	 * (struttura dati utilizzata nei linguaggi di programmazione per gestire l'esecuzione delle subroutine o delle funzioni)
 	 * di un programma, come operazioni intermedie o area di lavoro per operazioni temporanee.
 	 */
 	private static final String STORE_TM = "stm";
@@ -40,8 +39,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	private static final String STORE_RA = "sra";
 	/**
 	 * Memorizza il valore in FP (Frame Pointer).
-	 * Il Frame Pointer viene utilizzato per tenere traccia del frame di attivazione corrente
-	 * (struttura dati utilizzata nei linguaggi di programmazione per gestire l'esecuzione delle subroutine o delle funzioni)
+	 * Il Frame Pointer tiene traccia del frame di attivazione corrente
 	 * o dell'ambiente di esecuzione di una subroutine o di una funzione.
 	 */
 	private static final String STORE_FP = "sfp";

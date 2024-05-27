@@ -65,6 +65,7 @@ public class TypeRels {
     }
 
 	/**
+	 * ottimizzazione 3
 	 *
 	 * @param first TypeNode
 	 * @param second TypeNode

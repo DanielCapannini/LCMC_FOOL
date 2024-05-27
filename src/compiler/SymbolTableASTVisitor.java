@@ -379,6 +379,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
             this.stErrors++;
 		}
 		// Aggiunge la tabella virtuale alla tabella delle classi
+		//ottimizzazione 1
 		final Set<String> onClassVisitScope = new HashSet<>();
 		final VirtualTable virtualTable = new VirtualTable();
 		if (isSubClass) {
