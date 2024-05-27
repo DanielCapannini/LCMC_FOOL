@@ -20,7 +20,12 @@ public class TypeRels {
 		return Stream.iterate(type, Objects::nonNull, superType::get);
 	}
 
-
+	/**
+	 *
+	 * @param first nodo contenente il metodo
+	 * @param second nodo con cui paragonare
+	 * @return true se il metodo è ereditato dal secondo
+	 */
 	private static boolean isMethodOverride(final TypeNode first, final TypeNode second) {
 		if (!(first instanceof ArrowTypeNode firstArrowTypeNode) ||
 				!(second instanceof ArrowTypeNode secondArrowTypeNode)) {
