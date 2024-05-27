@@ -15,11 +15,41 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	private static final String HALT = "halt";
     private static final String PUSH = "push ";
 	private static final String POP = "pop";
+	/**
+	 * Copia il valore di FP (Frame Pointer).
+	 * Il Frame Pointer viene utilizzato per tenere traccia del frame di attivazione corrente
+	 * o dell'ambiente di esecuzione di una subroutine o di una funzione.
+	 */
 	private static final String COPY_FP = "cfp";
+	/**
+	 * Carica il valore di RA (Return Address).
+	 * Il Return Address indica il punto nel programma da cui è stata chiamata una funzione.
+	 */
 	private static final String LOAD_RA = "lra";
+	/**
+	 * Memorizza il valore in TM (Temporary Memory).
+	 * TM è utilizzato per memorizzare temporaneamente valori durante l'esecuzione
+	 * (struttura dati utilizzata nei linguaggi di programmazione per gestire l'esecuzione delle subroutine o delle funzioni)
+	 * di un programma, come operazioni intermedie o area di lavoro per operazioni temporanee.
+	 */
 	private static final String STORE_TM = "stm";
+	/**
+	 * Memorizza il valore in RA (Return Address).
+	 * Il Return Address indica il punto nel programma da cui è stata chiamata una funzione.
+	 */
 	private static final String STORE_RA = "sra";
+	/**
+	 * Memorizza il valore in FP (Frame Pointer).
+	 * Il Frame Pointer viene utilizzato per tenere traccia del frame di attivazione corrente
+	 * (struttura dati utilizzata nei linguaggi di programmazione per gestire l'esecuzione delle subroutine o delle funzioni)
+	 * o dell'ambiente di esecuzione di una subroutine o di una funzione.
+	 */
 	private static final String STORE_FP = "sfp";
+	/**
+	 * Carica il valore di TM (Temporary Memory).
+	 * TM è utilizzato per memorizzare temporaneamente valori durante l'esecuzione
+	 * di un programma, come operazioni intermedie o area di lavoro per operazioni temporanee.
+	 */
 	private static final String LOAD_TM = "ltm";
 	private static final String JUMP_SUBROUTINE = "js";
 	private static final String PRINT = "print";
@@ -27,15 +57,19 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	private static final String BRANCH = "b ";
 	private static final String MULT = "mult";
 	private static final String ADD = "add";
-	private static final String LOAD_WORD = "lw";
-	private static final String LOAD_FP = "lfp";
+	private static final String LOAD_WORD = "lw"; //Carica la parola dallo stack.
+	private static final String LOAD_FP = "lfp"; //Carica il valore di FP.
 	private static final String SUB = "sub";
 	private static final String DIV = "div";
-	private static final String BRANCH_LESS_EQUAL = "bleq ";
+	private static final String BRANCH_LESS_EQUAL = "bleq "; //Salto se il primo valore in cima allo stack è minore o uguale al secondo.
 	private static final String LOAD_HEAP_POINTER = "lhp";
 	private static final String STORE_WORD = "sw";
 	private static final String STORE_HP = "shp";
 
+	/**
+	 * Le dispatch tables delle classi.
+	 * Ogni dispatch tables è un elenco di etichette, una per ciascun metodo della classe.
+	 */
 	private final List<List<String>> dispatchTables = new ArrayList<>();
 
     public CodeGenerationASTVisitor() {
@@ -124,7 +158,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     @Override
     public String visitNode(VarNode node) {
         if (this.print) this.printNode(node, node.id);
-        return this.visit(node.expression);
+        return this.visit(node.expression);  // generate code for the expression
     }
 
 	/**
@@ -229,10 +263,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         for (int i = 0; i < node.nestingLevel - node.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
         return nlJoin(
 				LOAD_FP,            //carica il Control Link (che è un puntatore all'id del chiamante)
-				argumentCode,             //genera il codice per gli argomenti delle espressione in ordine inverso
+				argumentCode,              //genera il codice per gli argomenti delle espressione in ordine inverso
 				LOAD_FP,
-				getAR,                 //restituisce l'indirizzo del frame contenente l'id della dichiarazione
-				// seguendo la static chain (dell'access link)
+				getAR,                     //restituisce l'indirizzo del frame contenente l'id della dichiarazione
+				                           // seguendo la static chain (dell'access link)
 				STORE_TM,                  //setta il valore poppato nella temporary memory (con l'obiettivo di duplicare la cima dello stack
 				LOAD_TM,                   //carica l'Access Link (il puntatore al frame dell'id della dichiarazione della funzione
 				LOAD_TM,                   //duplica la cima dello stack
@@ -255,11 +289,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         String getAR = null;
         for (int i = 0; i < node.nestingLevel - node.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
         return nlJoin(
-                LOAD_FP, getAR, // retrieve address of frame containing "id" declaration
-                // by following the static chain (of Access Links)
+                LOAD_FP, getAR,     // retrieve address of frame containing "id" declaration
+                                           // by following the static chain (of Access Links)
                 PUSH + node.entry.offset,
-				ADD, // compute address of "id" declaration
-                LOAD_WORD // load value of "id" variable
+				ADD,                       // compute address of "id" declaration
+                LOAD_WORD                  // load value of "id" variable
         );
     }
 
@@ -294,9 +328,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(MinusNode node) {
 		if (this.print) this.printNode(node);
 		return nlJoin(
-                this.visit(node.left),                   //pusha il valore nella cima dello stack
-                this.visit(node.right),                  //pusha il valore nella cima dello stack
-				SUB                                 //li toglie dallo stack e li sottrae, pushando il nuovo valore nella cima dello stack
+                this.visit(node.left),
+                this.visit(node.right),
+				SUB
 		);
 	}
 
@@ -309,9 +343,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(DivNode node) {
 		if (this.print) this.printNode(node);
 		return nlJoin(
-                this.visit(node.left),                   //pusha il valore nella cima dello stack
-                this.visit(node.right),                  //pusha il valore nella cima dello stack
-				DIV                                 //li toglie dallo stack e li sottrae, pushando il nuovo valore nella cima dello stack
+                this.visit(node.left),
+                this.visit(node.right),
+				DIV
 		);
 	}
 
@@ -326,14 +360,14 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String trueLabel = freshLabel();
 		String endLabel = freshLabel();
 		return nlJoin(
-                this.visit(node.left),              //visita il valore e lo pusha nella cima dello stack
-                this.visit(node.right),                    //visita il valore e lo pusha nella cima dello stack
-				BRANCH_LESS_EQUAL + trueLabel,        //se il primo è minore o uguale al secondo salta all'etichetta trueLabel
-				PUSH + 0,                             //se è maggiore pusha 0 (false) nella cima dello stack
-				BRANCH + endLabel,                    //e termina, saltando alla endLabel
-				trueLabel + ":",                      //se è minore uguale
+                this.visit(node.left),       //visita il valore e lo pusha nella cima dello stack
+                this.visit(node.right),             //visita il valore e lo pusha nella cima dello stack
+				BRANCH_LESS_EQUAL + trueLabel,      //se il primo è minore o uguale al secondo salta all'etichetta trueLabel
+				PUSH + 0,                           //se è maggiore pusha 0 (false) nella cima dello stack
+				BRANCH + endLabel,                  //e termina, saltando alla endLabel
+				trueLabel + ":",                    //se è minore uguale
 				PUSH + 1,                           //pusha 1 (true) nella cima dello stack
-				endLabel + ":"                        //termina
+				endLabel + ":"                      //termina
 		);
 	}
 
@@ -348,8 +382,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String trueLabel = freshLabel();
 		String endLabel = freshLabel();
 		return nlJoin(
-                this.visit(node.right),         //visita il valore e lo pusha nella cima dello stack
-                this.visit(node.left),                 //visita il valore e lo pusha nella cima dello stack
+                this.visit(node.right),    //visita il valore e lo pusha nella cima dello stack
+                this.visit(node.left),            //visita il valore e lo pusha nella cima dello stack
 				BRANCH_LESS_EQUAL + trueLabel,    //se il primo è maggiore o uguale al secondo salta all'etichetta trueLabel
 				PUSH + 0,                         //se è minore pusha 0 (false) nella cima dello stack
 				BRANCH + endLabel,                //e termina, saltando alla endLabel
@@ -370,10 +404,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String trueLabel = freshLabel();
 		String endLabel = freshLabel();
 		return nlJoin(
-                this.visit(node.left),           //visita il valore e lo pusha nella cima dello stack
+                this.visit(node.left),      //visita il valore e lo pusha nella cima dello stack
 				PUSH + 1,                          //pusha 1
 				BRANCH_EQUAL + trueLabel,          //se il valore visitato è uguale a 1, salta all'etichetta trueLabel
-                this.visit(node.right),                 //se il primo non era vero, valuta comunque il secondo
+                this.visit(node.right),            //se il primo non era vero, valuta comunque il secondo
 				PUSH + 1,                          //pusha 1
 				BRANCH_EQUAL + trueLabel,          //se questa condizione è vera salta all'etichetta trueLabel
 				PUSH + 0,                          //se nessuna delle due condizioni è vera pusha 0
@@ -395,17 +429,17 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String falseLabel = freshLabel();
 		String endLabel = freshLabel();
 		return nlJoin(
-                this.visit(node.left),              //visita il valore e lo pusha nella cima dello stack
-				PUSH + 0,                             //pusha 0
-				BRANCH_EQUAL + falseLabel,            //se il valore visitato è uguale a 0, false, salta all'etichetta falseLabel
-                this.visit(node.right),                    //se il primo era vero, valuta comunque il secondo
-				PUSH + 0,                             //pusha 0
-				BRANCH_EQUAL + falseLabel,            //se il valore visitato è uguale a 0, false, salta all'etichetta falseLabel
-				PUSH + 1,                             //altrimenti pusha 1
-				BRANCH + endLabel,                    //salta alla endLabel per terminare
-				falseLabel + ":",                     //nel caso una delle due condizione o entrambe siano risultate false arriva qui
-				PUSH + 0,                             //pusha 0 in cima allo stack
-				endLabel + ":"                        //termina
+                this.visit(node.left),    //visita il valore e lo pusha nella cima dello stack
+				PUSH + 0,                        //pusha 0
+				BRANCH_EQUAL + falseLabel,       //se il valore visitato è uguale a 0, false, salta all'etichetta falseLabel
+                this.visit(node.right),               //se il primo era vero, valuta comunque il secondo
+				PUSH + 0,                        //pusha 0
+				BRANCH_EQUAL + falseLabel,       //se il valore visitato è uguale a 0, false, salta all'etichetta falseLabel
+				PUSH + 1,                        //altrimenti pusha 1
+				BRANCH + endLabel,               //salta alla endLabel per terminare
+				falseLabel + ":",                //nel caso una delle due condizione o entrambe siano risultate false arriva qui
+				PUSH + 0,                        //pusha 0 in cima allo stack
+				endLabel + ":"                   //termina
 		);
 	}
 
@@ -420,7 +454,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String itWasFalseLabel = freshLabel();
 		String endLabel = freshLabel();
 		return nlJoin(
-                this.visit(node.expression),             //visita il valore e lo pusha nella cima dello stack
+                this.visit(node.expression), //visita il valore e lo pusha nella cima dello stack
 				PUSH + 0,                           //pusha 0
 				BRANCH_EQUAL + itWasFalseLabel,     //se la condizione è falsa salta all'etichetta itWasFalseLabel
 				PUSH + 0,                           //altrimenti pusha in cima allo stack 0, traendo che inizialmente la condizione era vera
@@ -457,14 +491,14 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String createDispatchTable = null;
 		for (final String label : dispatchTable) {
 			createDispatchTable = nlJoin(
-					createDispatchTable,          //memorizza l'etichetta del metodo nel'heap
-					PUSH + label,                          //pusha l'etichetta del metodo
-					LOAD_HEAP_POINTER,                     //pusha il puntatore dell'heap
-					STORE_WORD,                            //memorizza l'etichetta del metodo nell'heap
-					LOAD_HEAP_POINTER,                     //pusha il puntatore dell'heap
-					PUSH + 1,                              //pusha 1
-					ADD,                                   //incrementa il puntatore dell'heap
-					STORE_HP                               //memorizza il puntatore dell'heap
+					createDispatchTable,    //memorizza l'etichetta del metodo nel'heap
+					PUSH + label,                  //pusha l'etichetta del metodo
+					LOAD_HEAP_POINTER,             //pusha il puntatore dell'heap
+					STORE_WORD,                    //memorizza l'etichetta del metodo nell'heap
+					LOAD_HEAP_POINTER,             //pusha il puntatore dell'heap
+					PUSH + 1,                      //pusha 1
+					ADD,                           //incrementa il puntatore dell'heap
+					STORE_HP                       //memorizza il puntatore dell'heap
 			);
 		}
 		return nlJoin(
@@ -494,19 +528,19 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		putCode(
 				nlJoin(
 						methodLabel + ":",
-						COPY_FP,                    //setta il frame-pointer con il valore dello stack-pointer
-						LOAD_RA,                    //carica il valore del return address
-						declarationListCode,           // genera il codice per le dichiarazioni locali usando un nuovo frame pointer
-                        this.visit(node.expression),            //genera il codice per il corpo dell'espressione della funzione
-						STORE_TM,                   //setta la memoria temporanea al valore poppato, quindi con il risultato della funzione
-						popDeclarationsList,        //rimuove le dichiarazioni locali dallo stack
-						STORE_RA,                   //setta il return address al valore poppato
-						POP,                        //rimuove l'Access Link dallo stack
-						popParametersList,          //rimuove il parametri dallo stack
-						STORE_FP,                   //setta il frame pointer al valore poppato, ovvero il control Link
-						LOAD_TM,                    //carica il valore della memoria temporanea con il risultato della funzione
-						LOAD_RA,                    //carica il valore nel return access
-						JUMP_SUBROUTINE             //salta all'indirizzo poppato
+						COPY_FP,                     //setta il frame-pointer con il valore dello stack-pointer
+						LOAD_RA,                     //carica il valore del return address
+						declarationListCode,         // genera il codice per le dichiarazioni locali usando un nuovo frame pointer
+                        this.visit(node.expression), //genera il codice per il corpo dell'espressione della funzione
+						STORE_TM,                    //setta la memoria temporanea al valore poppato, quindi con il risultato della funzione
+						popDeclarationsList,         //rimuove le dichiarazioni locali dallo stack
+						STORE_RA,                    //setta il return address al valore poppato
+						POP,                         //rimuove l'Access Link dallo stack
+						popParametersList,           //rimuove il parametri dallo stack
+						STORE_FP,                    //setta il frame pointer al valore poppato, ovvero il control Link
+						LOAD_TM,                     //carica il valore della memoria temporanea con il risultato della funzione
+						LOAD_RA,                     //carica il valore nel return access
+						JUMP_SUBROUTINE              //salta all'indirizzo poppato
 				)
 		);
 		return null;
@@ -535,11 +569,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			);
 		}
 		return nlJoin(
-				putArgumentsOnStack,                          //Aggiunge il codice per valutare gli argomenti
-				loadArgumentsOnHeap,                       //Aggiunge il codice per spostare gli argomenti sull'heap
-				PUSH + ExecuteVM.MEMSIZE,//Pusha l'indirizzo dell'entry point nella VM
-				PUSH + node.classSymbolTableEntry.offset,
-				ADD,
+				putArgumentsOnStack,                    //Aggiunge il codice per valutare gli argomenti
+				loadArgumentsOnHeap,                           //Aggiunge il codice per spostare gli argomenti sull'heap
+				PUSH + (ExecuteVM.MEMSIZE
+						+ node.classSymbolTableEntry.offset),  //Pusha l'indirizzo dell'entry point nella VM
 				LOAD_WORD,                                     //Carica il valore dall'indirizzo specificato (entry point)
 				LOAD_HEAP_POINTER,                             //Carica il puntatore all'heap
 				STORE_WORD,                                    //Memorizza il valore (entry point) nell'heap
