@@ -9,12 +9,16 @@ import java.util.Objects;
 
 import static compiler.TypeRels.*;
 
-//visitNode(n) fa il type checking di un Node n e ritorna:
-//- per una espressione, il suo tipo (oggetto BoolTypeNode o IntTypeNode)
-//- per una dichiarazione, "null"; controlla la correttezza interna della dichiarazione
-//(- per un tipo: "null"; controlla che il tipo non sia incompleto) 
-//
-//visitSTentry(s) ritorna, per una STentry s, il tipo contenuto al suo interno
+/**
+ * Questa classe implementa una fase di controllo del tipo per l'E-AST
+ * attraverso il pattern dei visitatori.
+ * visitNode(n) fa il type checking di un Node n e ritorna:
+ * - per una espressione, il suo tipo (oggetto BoolTypeNode o IntTypeNode)
+ * - per una dichiarazione, "null"; controlla la correttezza interna della dichiarazione
+ * (- per un tipo: "null"; controlla che il tipo non sia incompleto)
+ *
+ * visitSTentry(s) ritorna, per una STentry s, il tipo contenuto al suo interno
+ */
 public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException> {
 
 	public TypeCheckEASTVisitor() { super(true); } // enables incomplete tree exceptions
@@ -105,70 +109,17 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	}
 
 	/**
+	 * Prende l'input del codice associabile alla Symbol Table e lo manda al metodo checkVisit
+	 * per controllare che sia visitabile
 	 *
-	 * @param node IfNode
-	 * @return una visita al nodo dell'espressione
+	 * @param entry STentry
+	 * @return il risultato della visita
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
-	public TypeNode visitNode(IfNode node) throws TypeException {
-		if (this.print) this.printNode(node);
-		if ( !(isSubtype(this.visit(node.cond), new BoolTypeNode())) )
-			throw new TypeException("Non boolean condition in if",node.getLine());
-		TypeNode thenNode = this.visit(node.thenNode);
-		TypeNode elseNode = this.visit(node.elseNode);
-		if (isSubtype(thenNode, elseNode)) return elseNode;
-		if (isSubtype(elseNode, thenNode)) return thenNode;
-		final TypeNode returnType = lowestCommonAncestor(thenNode, elseNode);
-		if (returnType == null)
-			throw new TypeException("Incompatible types in then-else branches", node.getLine());
-		return returnType;
-	}
-
-	/**
-	 *
-	 * @param node EqualNode
-	 * @return new BoolTypeNode
-	 * @throws TypeException l'espressione non è corretta
-	 */
-	@Override
-	public TypeNode visitNode(EqualNode node) throws TypeException {
-		if (this.print) this.printNode(node);
-		TypeNode left = this.visit(node.left);
-		TypeNode right = this.visit(node.right);
-		if ( !(isSubtype(left, right) || isSubtype(right, left)) )
-			throw new TypeException("Incompatible types in equal",node.getLine());
-		return new BoolTypeNode();
-	}
-
-	/**
-	 *
-	 * @param node TimesNode
-	 * @return new IntTypeNode
-	 * @throws TypeException l'espressione non è corretta
-	 */
-	@Override
-	public TypeNode visitNode(TimesNode node) throws TypeException {
-		if (this.print) this.printNode(node);
-		if ( !(isSubtype(this.visit(node.left), new IntTypeNode())
-				&& isSubtype(this.visit(node.right), new IntTypeNode())) )
-			throw new TypeException("Non integers in multiplication",node.getLine());
-		return new IntTypeNode();
-	}
-
-	/**
-	 *
-	 * @param node PlusNode
-	 * @return new IntTypeNode
-	 * @throws TypeException l'espressione non è corretta
-	 */
-	@Override
-	public TypeNode visitNode(PlusNode node) throws TypeException {
-		if (this.print) this.printNode(node);
-		if ( !(isSubtype(this.visit(node.left), new IntTypeNode())
-				&& isSubtype(this.visit(node.right), new IntTypeNode())) )
-			throw new TypeException("Non integers in sum",node.getLine());
-		return new IntTypeNode();
+	public TypeNode visitSTentry(STentry entry) throws TypeException {
+		if (this.print) this.printSTentry("type");
+		return this.ckvisit(entry.type);
 	}
 
 	/**
@@ -244,17 +195,6 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 
 	/**
 	 *
-	 * @param node BoolTypeNode
-	 * @return null
-	 */
-	@Override
-	public TypeNode visitNode(BoolTypeNode node) {
-		if (this.print) this.printNode(node);
-		return null;
-	}
-
-	/**
-	 *
 	 * @param node IntTypeNode
 	 * @return null
 	 */
@@ -265,17 +205,33 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	}
 
 	/**
-	 * Prende l'input del codice associabile alla Symbol Table e lo manda al metodo checkVisit
-	 * per controllare che sia visitabile
 	 *
-	 * @param entry STentry
-	 * @return il risultato della visita
+	 * @param node TimesNode
+	 * @return new IntTypeNode
 	 * @throws TypeException l'espressione non è corretta
 	 */
 	@Override
-	public TypeNode visitSTentry(STentry entry) throws TypeException {
-		if (this.print) this.printSTentry("type");
-		return this.ckvisit(entry.type);
+	public TypeNode visitNode(TimesNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		if ( !(isSubtype(this.visit(node.left), new IntTypeNode())
+				&& isSubtype(this.visit(node.right), new IntTypeNode())) )
+			throw new TypeException("Non integers in multiplication",node.getLine());
+		return new IntTypeNode();
+	}
+
+	/**
+	 *
+	 * @param node PlusNode
+	 * @return new IntTypeNode
+	 * @throws TypeException l'espressione non è corretta
+	 */
+	@Override
+	public TypeNode visitNode(PlusNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		if ( !(isSubtype(this.visit(node.left), new IntTypeNode())
+				&& isSubtype(this.visit(node.right), new IntTypeNode())) )
+			throw new TypeException("Non integers in sum",node.getLine());
+		return new IntTypeNode();
 	}
 
 	/**
@@ -306,6 +262,54 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 				&& isSubtype(this.visit(node.right), new IntTypeNode())))
 			throw new TypeException("Non integers in div", node.getLine());
 		return new IntTypeNode();
+	}
+
+	/**
+	 *
+	 * @param node BoolTypeNode
+	 * @return null
+	 */
+	@Override
+	public TypeNode visitNode(BoolTypeNode node) {
+		if (this.print) this.printNode(node);
+		return null;
+	}
+
+	/**
+	 *
+	 * @param node IfNode
+	 * @return una visita al nodo dell'espressione
+	 * @throws TypeException l'espressione non è corretta
+	 */
+	@Override
+	public TypeNode visitNode(IfNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		if ( !(isSubtype(this.visit(node.cond), new BoolTypeNode())) )
+			throw new TypeException("Non boolean condition in if",node.getLine());
+		TypeNode thenNode = this.visit(node.thenNode);
+		TypeNode elseNode = this.visit(node.elseNode);
+		if (isSubtype(thenNode, elseNode)) return elseNode;
+		if (isSubtype(elseNode, thenNode)) return thenNode;
+		final TypeNode returnType = lowestCommonAncestor(thenNode, elseNode);
+		if (returnType == null)
+			throw new TypeException("Incompatible types in then-else branches", node.getLine());
+		return returnType;
+	}
+
+	/**
+	 *
+	 * @param node EqualNode
+	 * @return new BoolTypeNode
+	 * @throws TypeException l'espressione non è corretta
+	 */
+	@Override
+	public TypeNode visitNode(EqualNode node) throws TypeException {
+		if (this.print) this.printNode(node);
+		TypeNode left = this.visit(node.left);
+		TypeNode right = this.visit(node.right);
+		if ( !(isSubtype(left, right) || isSubtype(right, left)) )
+			throw new TypeException("Incompatible types in equal",node.getLine());
+		return new BoolTypeNode();
 	}
 
 	/**
