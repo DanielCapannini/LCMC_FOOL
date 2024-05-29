@@ -10,7 +10,7 @@ import compiler.lib.*;
  * Questa classe implementa la fase di collegamento del compilatore.
  * Utilizza l'ASVisitor per visitare l'AST e costruire la symbol table.
  * La symbol table viene utilizzata per collegare gli identificatori alle loro dichiarazioni.
- * Dopo la visita, l'AST viene arricchito e viene chiamato enriched AST
+ * Dopo la visita, l'AST viene arricchito e viene chiamato Enriched AST
  */
 public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
