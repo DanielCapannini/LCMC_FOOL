@@ -50,7 +50,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	/**
 	 *
 	 * @param ctx the parse tree
-	 * @return
+	 * @return il risultato della visita
 	 */
 	@Override
 	public Node visitProg(ProgContext ctx) {
@@ -311,7 +311,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	/**
 	 *
 	 * @param ctx the parse tree
-	 * @return
+	 * @return il risultato della visita all'espressione
 	 */
 	@Override
 	public Node visitPars(ParsContext ctx) {
