@@ -219,6 +219,78 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 	/**
 	 *
+	 * @param node OrNode
+	 * @return codice generato
+	 */
+	@Override
+	public String visitNode(OrNode node) {
+		if (this.print) this.printNode(node);
+		String trueLabel = freshLabel();
+		String endLabel = freshLabel();
+		return nlJoin(
+				this.visit(node.left),
+				PUSH + 1,
+				BRANCH_EQUAL + trueLabel,
+				this.visit(node.right),
+				PUSH + 1,
+				BRANCH_EQUAL + trueLabel,
+				PUSH + 0,
+				BRANCH + endLabel,
+				trueLabel + ":",
+				PUSH + 1,
+				endLabel + ":"
+		);
+	}
+
+	/**
+	 *
+	 * @param node AndNode
+	 * @return codice generato
+	 */
+	@Override
+	public String visitNode(AndNode node) {
+		if (this.print) this.printNode(node);
+		String falseLabel = freshLabel();
+		String endLabel = freshLabel();
+		return nlJoin(
+				this.visit(node.left),
+				PUSH + 0,
+				BRANCH_EQUAL + falseLabel,
+				this.visit(node.right),
+				PUSH + 0,
+				BRANCH_EQUAL + falseLabel,
+				PUSH + 1,
+				BRANCH + endLabel,
+				falseLabel + ":",
+				PUSH + 0,
+				endLabel + ":"
+		);
+	}
+
+	/**
+	 *
+	 * @param node NotNode
+	 * @return codice generato
+	 */
+	@Override
+	public String visitNode(NotNode node) {
+		if (this.print) this.printNode(node);
+		String itWasFalseLabel = freshLabel();
+		String endLabel = freshLabel();
+		return nlJoin(
+				this.visit(node.expression),
+				PUSH + 0,
+				BRANCH_EQUAL + itWasFalseLabel,
+				PUSH + 0,
+				BRANCH + endLabel,
+				itWasFalseLabel + ":",
+				PUSH + 1,
+				endLabel + ":"
+		);
+	}
+
+	/**
+	 *
 	 * @param node TimesNode
 	 * @return codice generato
 	 */
@@ -255,7 +327,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     @Override
     public String visitNode(CallNode node) {
         if (this.print) this.printNode(node, node.id);
-        String argumentCode = null, getAR = null;
+        String argumentCode = null;
+		String getAR = null;
 		final String loadARAddress = node.entry.type instanceof MethodTypeNode ? LOAD_WORD : "";
         for (int i = node.argumentList.size() - 1; i >= 0; i--) argumentCode = nlJoin(argumentCode, this.visit(node.argumentList.get(i)));
         for (int i = 0; i < node.nestingLevel - node.entry.nl; i++) getAR = nlJoin(getAR, LOAD_WORD);
@@ -380,86 +453,14 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String trueLabel = freshLabel();
 		String endLabel = freshLabel();
 		return nlJoin(
-                this.visit(node.right),    //visita il valore e lo pusha nella cima dello stack
-                this.visit(node.left),            //visita il valore e lo pusha nella cima dello stack
-				BRANCH_LESS_EQUAL + trueLabel,    //se il primo è maggiore o uguale al secondo salta all'etichetta trueLabel
-				PUSH + 0,                         //se è minore pusha 0 (false) nella cima dello stack
-				BRANCH + endLabel,                //e termina, saltando alla endLabel
-				trueLabel + ":",                  //se è maggiore uguale
-				PUSH + 1,                         //pusha 1 (true) nella cima dello stack
-				endLabel + ":"                    //termina
-		);
-	}
-
-	/**
-	 *
-	 * @param node OrNode
-	 * @return codice generato
-	 */
-	@Override
-	public String visitNode(OrNode node) {
-		if (this.print) this.printNode(node);
-		String trueLabel = freshLabel();
-		String endLabel = freshLabel();
-		return nlJoin(
-                this.visit(node.left),      //visita il valore e lo pusha nella cima dello stack
-				PUSH + 1,                          //pusha 1
-				BRANCH_EQUAL + trueLabel,          //se il valore visitato è uguale a 1, salta all'etichetta trueLabel
-                this.visit(node.right),            //se il primo non era vero, valuta comunque il secondo
-				PUSH + 1,                          //pusha 1
-				BRANCH_EQUAL + trueLabel,          //se questa condizione è vera salta all'etichetta trueLabel
-				PUSH + 0,                          //se nessuna delle due condizioni è vera pusha 0
-				BRANCH + endLabel,                 //salta per terminare
-				trueLabel + ":",                   //se uno dei due booleani risulta vero arriva in questa sezione
-				PUSH + 1,                          //e pusha 1 sulla cima dello stack
-				endLabel + ":"                     //termina
-		);
-	}
-
-	/**
-	 *
-	 * @param node AndNode
-	 * @return codice generato
-	 */
-	@Override
-	public String visitNode(AndNode node) {
-		if (this.print) this.printNode(node);
-		String falseLabel = freshLabel();
-		String endLabel = freshLabel();
-		return nlJoin(
-                this.visit(node.left),    //visita il valore e lo pusha nella cima dello stack
-				PUSH + 0,                        //pusha 0
-				BRANCH_EQUAL + falseLabel,       //se il valore visitato è uguale a 0, false, salta all'etichetta falseLabel
-                this.visit(node.right),               //se il primo era vero, valuta comunque il secondo
-				PUSH + 0,                        //pusha 0
-				BRANCH_EQUAL + falseLabel,       //se il valore visitato è uguale a 0, false, salta all'etichetta falseLabel
-				PUSH + 1,                        //altrimenti pusha 1
-				BRANCH + endLabel,               //salta alla endLabel per terminare
-				falseLabel + ":",                //nel caso una delle due condizione o entrambe siano risultate false arriva qui
-				PUSH + 0,                        //pusha 0 in cima allo stack
-				endLabel + ":"                   //termina
-		);
-	}
-
-	/**
-	 *
-	 * @param node NotNode
-	 * @return codice generato
-	 */
-	@Override
-	public String visitNode(NotNode node) {
-		if (this.print) this.printNode(node);
-		String itWasFalseLabel = freshLabel();
-		String endLabel = freshLabel();
-		return nlJoin(
-                this.visit(node.expression), //visita il valore e lo pusha nella cima dello stack
-				PUSH + 0,                           //pusha 0
-				BRANCH_EQUAL + itWasFalseLabel,     //se la condizione è falsa salta all'etichetta itWasFalseLabel
-				PUSH + 0,                           //altrimenti pusha in cima allo stack 0, traendo che inizialmente la condizione era vera
-				BRANCH + endLabel,                  //salta alla endLabel
-				itWasFalseLabel + ":",              //se era falsa arriva qui
-				PUSH + 1,                           //pusha 1, true, in cima allo stack
-				endLabel + ":"                      //termina
+                this.visit(node.right),
+                this.visit(node.left),
+				BRANCH_LESS_EQUAL + trueLabel,
+				PUSH + 0,
+				BRANCH + endLabel,
+				trueLabel + ":",
+				PUSH + 1,
+				endLabel + ":"
 		);
 	}
 
@@ -500,8 +501,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			);
 		}
 		return nlJoin(
-				LOAD_HEAP_POINTER,
-				createDispatchTable
+				LOAD_HEAP_POINTER,     //push heap pointer, l'indirizzo della dispatch table
+				createDispatchTable           //codice generato per creare la dispatch table nell'heap
 		);
 	}
 
@@ -609,9 +610,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			getARCode = nlJoin(getARCode, LOAD_WORD);
 		return nlJoin(
 				LOAD_FP,             //Carica il Control Link (puntatore al frame della funzione chiamante di "id")
-				argumentCode,              //Genera il codice per le espressioni degli argomenti nell'ordine invertito
-				LOAD_FP, getARCode,         //Recupera l'indirizzo del frame che contiene la dichiarazione di "id"
-				//seguendo la catena statica (degli Access Links)
+				argumentCode,               //Genera il codice per le espressioni degli argomenti nell'ordine invertito
+				LOAD_FP, getARCode,
 				PUSH + node.symbolTableEntry.offset,
 				ADD,                        //Calcola l'indirizzo della dichiarazione di "id"
 				LOAD_WORD,                  //Carica l'indirizzo della funzione "id"
