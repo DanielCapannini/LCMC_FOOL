@@ -1,6 +1,5 @@
 push 0
 lhp
-
 push function0
 lhp
 sw
@@ -9,7 +8,6 @@ push 1
 add
 shp
 lhp
-
 push function0
 lhp
 sw
@@ -25,7 +23,6 @@ push 1
 add
 shp
 lhp
-
 push function2
 lhp
 sw
@@ -41,7 +38,6 @@ push 1
 add
 shp
 lhp
-
 push function2
 lhp
 sw

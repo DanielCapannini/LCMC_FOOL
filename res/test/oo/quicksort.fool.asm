@@ -1,6 +1,5 @@
 push 0
 lhp
-
 push function0
 lhp
 sw

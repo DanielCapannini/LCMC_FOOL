@@ -21,6 +21,7 @@ public class TypeRels {
 	}
 
 	/**
+	 * TODO qui mancano delle cose, tra cui il controllo nel numero di parametri
 	 *
 	 * @param first nodo contenente il metodo
 	 * @param second nodo con cui paragonare

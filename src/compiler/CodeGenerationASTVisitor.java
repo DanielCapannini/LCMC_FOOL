@@ -140,7 +140,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
                         POP,                         // remove Access Link from stack
                         popParametersList,           // remove parameters from stack
                         STORE_FP,                    // set $fp to popped value (Control Link)
-                        LOAD_FP,                     // load $tm value (function result)
+                        LOAD_TM,                     // load $tm value (function result)
                         LOAD_RA,                     // load $ra value
                         JUMP_SUBROUTINE              // jump to to popped address
                 )
